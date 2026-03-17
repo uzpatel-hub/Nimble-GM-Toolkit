@@ -33,6 +33,7 @@ export default function NpcDetailPage() {
   const [newLocation, setNewLocation] = useState("");
   const [dirty, setDirty] = useState(false);
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (npc) {
       setName(npc.name);
@@ -45,6 +46,7 @@ export default function NpcDetailPage() {
       setDirty(false);
     }
   }, [npc]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const markDirty = () => setDirty(true);
 

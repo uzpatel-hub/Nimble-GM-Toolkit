@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { useMonsterStore } from '@/stores/monster-store';
@@ -53,7 +53,6 @@ function actionTypeBadgeVariant(type?: string) {
 
 export default function MonsterDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const id = params.id as string;
   const { monsters, updateMonster } = useMonsterStore();
 

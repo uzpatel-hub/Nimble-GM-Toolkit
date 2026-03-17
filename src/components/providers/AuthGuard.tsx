@@ -1,18 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/stores/auth-store';
 import { LoginScreen } from '@/components/auth/LoginScreen';
+import { useMounted } from '@/hooks/use-mounted';
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
-  const [mounted, setMounted] = useState(false);
+  const mounted = useMounted();
   const currentUser = useAuthStore((s) => s.currentUser);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  // Avoid hydration mismatch — render nothing until client mounts
   if (!mounted) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">

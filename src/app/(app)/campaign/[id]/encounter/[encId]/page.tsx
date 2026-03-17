@@ -8,6 +8,7 @@ import { useMonsterStore } from "@/stores/monster-store";
 import { useCampaignStore } from "@/stores/campaign-store";
 import { useImageStore } from "@/stores/image-store";
 import { ChatPanel } from "@/components/chat/ChatPanel";
+import { ImagePicker } from "@/components/layout/ImagePicker";
 import type { EncounterMonster, DifficultyRating } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -81,6 +82,7 @@ export default function EncounterDetailPage() {
   const [showBrowser, setShowBrowser] = useState(true);
   const [imageId, setImageId] = useState<string>("");
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (encounter) {
       setName(encounter.name);
@@ -92,6 +94,7 @@ export default function EncounterDetailPage() {
       setImageId(encounter.imageId ?? "");
     }
   }, [encounter]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const filteredMonsters = useMemo(() => {
     let filtered = monsters;
@@ -209,6 +212,7 @@ export default function EncounterDetailPage() {
           Back
         </Button>
         <div className="flex gap-2">
+          <ImagePicker campaignId={campaignId} />
           {imageId && (
             <Button
               variant="outline"

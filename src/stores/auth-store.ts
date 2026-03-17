@@ -60,6 +60,9 @@ export const useAuthStore = create<AuthStore>()(
         // Restore the module-level currentUser on page load
         if (state?.currentUser) {
           setCurrentUser(state.currentUser);
+          // Re-hydrate all other stores now that currentUser is set
+          // (they may have loaded before auth finished restoring)
+          setTimeout(() => rehydrateAllStores(), 0);
         }
       },
     }

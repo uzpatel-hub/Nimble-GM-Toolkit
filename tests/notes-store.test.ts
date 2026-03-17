@@ -24,7 +24,7 @@ describe('Notes Store', () => {
   });
 
   it('should add a timeline note', () => {
-    const id = useNotesStore.getState().addNote({
+    const _id = useNotesStore.getState().addNote({
       campaignId: 'camp-1',
       title: 'The Ambush',
       content: 'Goblins attacked the caravan.',

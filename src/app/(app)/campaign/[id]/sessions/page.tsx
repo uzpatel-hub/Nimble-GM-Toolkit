@@ -45,6 +45,7 @@ export default function SessionsPage() {
   );
 
   // Update default session number when sessions change
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (campaignSessions.length > 0) {
       setSessionNumber(
@@ -54,6 +55,7 @@ export default function SessionsPage() {
       setSessionNumber(1);
     }
   }, [campaignSessions.length]); // eslint-disable-line react-hooks/exhaustive-deps
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   function handleCreate() {
     if (!title.trim()) return;

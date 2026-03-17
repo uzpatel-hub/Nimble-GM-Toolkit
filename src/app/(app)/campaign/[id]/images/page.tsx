@@ -108,6 +108,7 @@ export default function ImagesPage() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {imgs.map((img) => (
           <Card key={img.id}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={img.dataUri}
               alt={img.name}
@@ -199,6 +200,7 @@ export default function ImagesPage() {
                   />
                   {newDataUri && (
                     <div className="space-y-1">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={newDataUri}
                         alt="Preview"

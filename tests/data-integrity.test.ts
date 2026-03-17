@@ -76,7 +76,7 @@ describe('Data Integrity', () => {
     });
 
     it('should have at least 3 items per faction', () => {
-      for (const [faction, items] of Object.entries(LOOT_TABLES)) {
+      for (const [_faction, items] of Object.entries(LOOT_TABLES)) {
         expect(items.length).toBeGreaterThanOrEqual(3);
       }
     });

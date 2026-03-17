@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -30,6 +30,7 @@ import {
   LogOut,
 } from "lucide-react";
 import { useTheme } from "next-themes";
+import { useMounted } from "@/hooks/use-mounted";
 
 interface NavItem {
   label: string;
@@ -39,7 +40,7 @@ interface NavItem {
 
 export function AppSidebar() {
   const [collapsed, setCollapsed] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const mounted = useMounted();
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
   const currentUser = useAuthStore((s) => s.currentUser);
@@ -48,11 +49,6 @@ export function AppSidebar() {
   const activeCampaignId = useCampaignStore((s) => s.activeCampaignId);
   const setActiveCampaign = useCampaignStore((s) => s.setActiveCampaignId);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  const activeCampaign = campaigns.find((c) => c.id === activeCampaignId);
   const campaignPrefix = activeCampaignId ? `/campaign/${activeCampaignId}` : "";
 
   const campaignNav: NavItem[] = mounted && activeCampaignId

@@ -16,7 +16,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
 import {
   Dialog,
   DialogContent,
@@ -26,7 +25,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { MessageContent } from '@/components/chat/MessageContent';
-import type { ChatMessage, ChatConversation } from '@/types';
+import type { ChatMessage } from '@/types';
 
 const ChatBubble = memo(function ChatBubble({
   msg,

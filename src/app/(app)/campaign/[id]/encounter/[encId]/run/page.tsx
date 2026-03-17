@@ -7,10 +7,11 @@ import { ArrowLeft } from "lucide-react";
 import { useEncounterStore } from "@/stores/encounter-store";
 import { useMonsterStore } from "@/stores/monster-store";
 import { useCampaignStore } from "@/stores/campaign-store";
+import { ImagePicker } from "@/components/layout/ImagePicker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
+
 import type { Monster, MonsterAbility } from "@/types";
 
 interface MonsterInstance {
@@ -77,17 +78,6 @@ export default function RunEncounterPage() {
   const [selectedId, setSelectedId] = useState<string | null>(initialInstances[0]?.instanceId ?? null);
   const [round, setRound] = useState(1);
 
-  if (!encounter || !campaign) {
-    return (
-      <div className="p-6">
-        <p className="text-muted-foreground">Encounter not found.</p>
-        <Link href={`/campaign/${campaignId}/encounters`} className="text-primary underline mt-2 inline-block">
-          Back to encounters
-        </Link>
-      </div>
-    );
-  }
-
   // Unique monsters for the right panel (deduplicated by monster id)
   const uniqueMonsters = useMemo(() => {
     const seen = new Set<string>();
@@ -111,6 +101,17 @@ export default function RunEncounterPage() {
       panel.scrollTo({ top: el.offsetTop - panel.offsetTop, behavior: "smooth" });
     }
   }, []);
+
+  if (!encounter || !campaign) {
+    return (
+      <div className="p-6">
+        <p className="text-muted-foreground">Encounter not found.</p>
+        <Link href={`/campaign/${campaignId}/encounters`} className="text-primary underline mt-2 inline-block">
+          Back to encounters
+        </Link>
+      </div>
+    );
+  }
 
   function handleSelectInstance(instanceId: string) {
     setSelectedId(instanceId);
@@ -154,7 +155,6 @@ export default function RunEncounterPage() {
   }
 
   const aliveCount = instances.filter((i) => i.currentHp > 0).length;
-  const deadCount = instances.length - aliveCount;
 
   return (
     <div className="flex flex-col h-[100dvh]">
@@ -171,6 +171,7 @@ export default function RunEncounterPage() {
           </span>
         </div>
         <div className="flex gap-1">
+          <ImagePicker campaignId={campaignId} />
           {encounter?.imageId && (
             <Button variant="outline" size="sm"
               onClick={() => window.open(`/present?img=${encounter.imageId}`, '_blank', 'noopener')}>

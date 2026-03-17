@@ -17,7 +17,6 @@ import {
 } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import type { Condition, CombatRule } from '@/types';
 import { CONDITIONS, COMBAT_RULES, SKILLS } from '@/data/rules';
 
 export default function RulesPage() {

@@ -30,6 +30,7 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { PartyMembersCard } from '@/components/party/PartyMembersCard';
 import { ChatPanel } from '@/components/chat/ChatPanel';
+import { ImagePicker } from '@/components/layout/ImagePicker';
 import type { ChecklistItem, Encounter, Session, SessionEncounter, SessionEncounterType, StoredImage } from '@/types';
 
 export default function SessionDetailPage() {
@@ -70,6 +71,7 @@ export default function SessionDetailPage() {
   }, [campaignId, setActiveCampaignId]);
 
   // Initialize local state from session
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (session) {
       setNotes(session.notes);
@@ -79,6 +81,7 @@ export default function SessionDetailPage() {
       setHasChanges(false);
     }
   }, [session?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   function markChanged() {
     setHasChanges(true);
@@ -249,6 +252,7 @@ export default function SessionDetailPage() {
         description={campaign.name}
         actions={
           <div className="flex gap-2">
+            <ImagePicker campaignId={campaignId} />
             <Link href={`/campaign/${campaignId}/sessions`}>
               <Button variant="outline">Back to Sessions</Button>
             </Link>

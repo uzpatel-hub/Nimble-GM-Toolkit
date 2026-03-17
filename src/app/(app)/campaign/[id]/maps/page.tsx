@@ -83,6 +83,7 @@ export default function MapsPage() {
                   <Label>Image</Label>
                   <Input type="file" accept="image/*" onChange={handleFileChange} />
                   {newImage && (
+                    // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={newImage}
                       alt="Preview"
@@ -115,6 +116,7 @@ export default function MapsPage() {
               className="cursor-pointer transition-shadow hover:shadow-md"
               onClick={() => router.push(`/campaign/${campaignId}/map/${map.id}`)}
             >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={map.imageDataUri}
                 alt={map.name}

@@ -1,9 +1,11 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { useSettingsStore } from '@/stores/settings-store';
 import { createProvider } from '@/lib/ai/provider';
+import { downloadBackup, importBackup } from '@/lib/backup';
+import { rehydrateAllStores } from '@/lib/store-registry';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -22,7 +24,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import type { AIProviderType } from '@/types';
 
@@ -62,12 +63,12 @@ export default function SettingsPage() {
 
     try {
       const ai = createProvider(provider, apiKey.trim(), model.trim() || modelPlaceholder);
-      let response = '';
+      let _response = '';
       await ai.sendMessage(
         [{ role: 'user', content: 'Hello' }],
         'Respond with exactly: Connection successful.',
         (chunk) => {
-          response += chunk;
+          _response += chunk;
         }
       );
       setTestStatus('success');
@@ -233,6 +234,9 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
 
+        {/* Backup & Restore */}
+        <BackupRestoreCard />
+
         {/* Save */}
         <div className="flex items-center gap-3">
           <Button onClick={handleSave}>Save Settings</Button>
@@ -242,5 +246,89 @@ export default function SettingsPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+function BackupRestoreCard() {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [restoreStatus, setRestoreStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [restoreMessage, setRestoreMessage] = useState('');
+
+  function handleExport() {
+    try {
+      downloadBackup();
+    } catch (err) {
+      setRestoreStatus('error');
+      setRestoreMessage(err instanceof Error ? err.message : 'Export failed');
+    }
+  }
+
+  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const result = importBackup(reader.result as string);
+        rehydrateAllStores();
+        setRestoreStatus('success');
+        setRestoreMessage(
+          `Restored ${result.storeCount} data stores from backup (originally from "${result.username}"). Page will reload in 2 seconds...`
+        );
+        setTimeout(() => window.location.reload(), 2000);
+      } catch (err) {
+        setRestoreStatus('error');
+        setRestoreMessage(err instanceof Error ? err.message : 'Import failed');
+      }
+    };
+    reader.readAsText(file);
+
+    // Reset file input so the same file can be selected again
+    e.target.value = '';
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Backup & Restore</CardTitle>
+        <CardDescription>
+          Download a backup of all your data or restore from a previous backup.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex gap-3">
+          <Button variant="outline" onClick={handleExport}>
+            Download Backup
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            Restore from Backup
+          </Button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".json"
+            className="hidden"
+            onChange={handleFileSelect}
+          />
+        </div>
+
+        {restoreStatus !== 'idle' && (
+          <p className={`text-sm ${
+            restoreStatus === 'success' ? 'text-green-600' : 'text-destructive'
+          }`}>
+            {restoreMessage}
+          </p>
+        )}
+
+        <p className="text-xs text-muted-foreground">
+          Backups include all campaigns, sessions, NPCs, notes, encounters, maps,
+          images, and settings. Restoring will overwrite your current data.
+        </p>
+      </CardContent>
+    </Card>
   );
 }
