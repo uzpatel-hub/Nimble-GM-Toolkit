@@ -9,6 +9,7 @@ import { useCampaignStore } from "@/stores/campaign-store";
 import { useImageStore } from "@/stores/image-store";
 import { ChatPanel } from "@/components/chat/ChatPanel";
 import { ImagePicker } from "@/components/layout/ImagePicker";
+import { openPresentWindow } from "@/lib/present-window";
 import type { EncounterMonster, DifficultyRating } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -217,7 +218,7 @@ export default function EncounterDetailPage() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => window.open(`/present?img=${imageId}`, '_blank', 'noopener')}
+              onClick={() => openPresentWindow(`/present?img=${imageId}`)}
             >
               Present to Players
             </Button>

@@ -31,6 +31,7 @@ import { Separator } from '@/components/ui/separator';
 import { PartyMembersCard } from '@/components/party/PartyMembersCard';
 import { ChatPanel } from '@/components/chat/ChatPanel';
 import { ImagePicker } from '@/components/layout/ImagePicker';
+import { openPresentWindow } from '@/lib/present-window';
 import type { ChecklistItem, Encounter, Session, SessionEncounter, SessionEncounterType, StoredImage } from '@/types';
 
 export default function SessionDetailPage() {
@@ -445,7 +446,7 @@ export default function SessionDetailPage() {
                           variant="outline"
                           size="sm"
                           className="h-6 text-xs"
-                          onClick={() => window.open(`/present?img=${enc.imageId}`, '_blank', 'noopener')}
+                          onClick={() => openPresentWindow(`/present?img=${enc.imageId}`)}
                         >
                           Present to Players
                         </Button>

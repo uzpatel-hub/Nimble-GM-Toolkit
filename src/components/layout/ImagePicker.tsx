@@ -5,6 +5,7 @@ import { ImageIcon, X, Maximize2 } from 'lucide-react';
 import { useImageStore } from '@/stores/image-store';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { openPresentWindow } from '@/lib/present-window';
 import type { ImageCategory } from '@/types';
 
 const CATEGORIES: ImageCategory[] = ['map', 'npc-portrait', 'scene', 'handout'];
@@ -46,7 +47,7 @@ export function ImagePicker({ campaignId }: ImagePickerProps) {
   const defaultTab = CATEGORIES.find((c) => imagesByCategory[c].length > 0) ?? 'scene';
 
   function presentImage(imageId: string) {
-    window.open(`/present?img=${imageId}`, '_blank', 'noopener');
+    openPresentWindow(`/present?img=${imageId}`);
   }
 
   if (campaignImages.length === 0) return null;

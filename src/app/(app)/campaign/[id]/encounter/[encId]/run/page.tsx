@@ -8,6 +8,7 @@ import { useEncounterStore } from "@/stores/encounter-store";
 import { useMonsterStore } from "@/stores/monster-store";
 import { useCampaignStore } from "@/stores/campaign-store";
 import { ImagePicker } from "@/components/layout/ImagePicker";
+import { openPresentWindow } from "@/lib/present-window";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -174,7 +175,7 @@ export default function RunEncounterPage() {
           <ImagePicker campaignId={campaignId} />
           {encounter?.imageId && (
             <Button variant="outline" size="sm"
-              onClick={() => window.open(`/present?img=${encounter.imageId}`, '_blank', 'noopener')}>
+              onClick={() => openPresentWindow(`/present?img=${encounter.imageId}`)}>
               Present to Players
             </Button>
           )}

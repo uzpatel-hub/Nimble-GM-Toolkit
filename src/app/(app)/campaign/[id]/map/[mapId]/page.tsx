@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { openPresentWindow } from "@/lib/present-window";
 import {
   ArrowLeft,
   MapPin,
@@ -206,7 +207,7 @@ export default function MapViewerPage() {
 
   const handlePresentToPlayers = useCallback((withPins: boolean) => {
     const url = withPins ? `/present?map=${mapId}&pins=1` : `/present?map=${mapId}`;
-    window.open(url, '_blank', 'popup=true');
+    openPresentWindow(url);
   }, [mapId]);
 
   if (!map) {
