@@ -22,6 +22,7 @@ export interface Session {
   title: string;
   notes: string;
   status: 'planned' | 'in-progress' | 'completed';
+  partyLevelOverride?: number;
   checklist: ChecklistItem[];
   sessionEncounters: SessionEncounter[];
   linkedEncounterIds: string[];
@@ -44,8 +45,10 @@ export interface SessionEncounter {
   title: string;
   type: SessionEncounterType;
   description: string;
+  notes?: string;
   linkedEncounterId?: string;
   imageId?: string;
+  completed?: boolean;
 }
 
 // --- Party Members ---
@@ -56,6 +59,7 @@ export interface PartyMember {
   playerName: string;
   class: string;
   race: string;
+  imageId?: string;
 }
 
 // --- AI Chat ---
@@ -123,6 +127,7 @@ export interface GameMap {
   campaignId: string;
   name: string;
   imageDataUri: string;
+  imageId?: string;
   parentMapId?: string;
   pins: MapPin[];
   createdAt: string;
@@ -249,7 +254,7 @@ export interface TreasureEntry {
 
 // --- Images ---
 
-export type ImageCategory = 'map' | 'npc-portrait' | 'scene' | 'handout';
+export type ImageCategory = 'map' | 'npc-portrait' | 'player-portrait' | 'scene' | 'handout';
 
 export interface StoredImage {
   id: string;

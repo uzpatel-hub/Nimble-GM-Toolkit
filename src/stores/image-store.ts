@@ -3,6 +3,8 @@ import { persist } from 'zustand/middleware';
 import type { StoredImage } from '@/types';
 import { createUserStorage } from '@/lib/user-storage';
 import { registerStore } from '@/lib/store-registry';
+import { putImageBlob, deleteImageBlob } from '@/lib/image-db';
+import { cacheImageData } from '@/hooks/use-image-data';
 
 interface ImageStore {
   images: StoredImage[];
@@ -24,34 +26,59 @@ export const useImageStore = create<ImageStore>()(
       addImage: (image) => {
         const id = crypto.randomUUID();
         const now = new Date().toISOString();
+        const { dataUri, ...metadata } = image;
+        // Store blob in IndexedDB, metadata in localStorage
+        putImageBlob(`img:${id}`, dataUri);
+        cacheImageData(`img:${id}`, dataUri);
         set((state) => ({
           images: [
             ...state.images,
-            { ...image, id, createdAt: now },
+            { ...metadata, dataUri: '', id, createdAt: now },
           ],
         }));
         return id;
       },
 
-      updateImage: (id, updates) =>
+      updateImage: (id, updates) => {
+        if (updates.dataUri) {
+          putImageBlob(`img:${id}`, updates.dataUri);
+          cacheImageData(`img:${id}`, updates.dataUri);
+          updates = { ...updates, dataUri: '' };
+        }
         set((state) => ({
           images: state.images.map((img) =>
             img.id === id ? { ...img, ...updates } : img
           ),
-        })),
+        }));
+      },
 
-      deleteImage: (id) =>
+      deleteImage: (id) => {
+        deleteImageBlob(`img:${id}`);
         set((state) => ({
           images: state.images.filter((img) => img.id !== id),
-        })),
+        }));
+      },
 
       getImagesByCampaign: (campaignId) =>
         get().images.filter((img) => img.campaignId === campaignId),
     }),
     {
       name: 'nimble-gm-images',
-      version: 1,
+      version: 2,
       storage: createUserStorage('nimble-gm-images'),
+      migrate: (persisted, version) => {
+        const state = persisted as { images: StoredImage[] };
+        if (version < 2 && state.images) {
+          // Migrate inline dataUri to IndexedDB
+          for (const img of state.images) {
+            if (img.dataUri) {
+              putImageBlob(`img:${img.id}`, img.dataUri);
+              img.dataUri = '';
+            }
+          }
+        }
+        return state;
+      },
     }
   )
 );

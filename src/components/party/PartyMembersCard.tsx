@@ -5,24 +5,53 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { ImageSelect } from '@/components/ui/image-select';
+import { StoredImg } from '@/components/ui/stored-image';
 import type { PartyMember } from '@/types';
+
+const ANCESTRIES = {
+  Common: ['Human', 'Dwarf', 'Elf', 'Halfling', 'Gnome'],
+  Exotic: [
+    'Birdfolk', 'Bunbun', 'Celestial', 'Changeling', 'Crystalborn',
+    'Dragonborn', 'Dryad/Shroomling', 'Fiendkin', 'Goblin', 'Half-Giant',
+    'Kobold', 'Minotaur/Beastfolk', 'Oozeling/Construct', 'Orc',
+    'Planarbeing', 'Ratfolk', 'Stoatling', 'Turtlefolk', 'Wyrdling',
+  ],
+};
+
+const CLASSES = [
+  'Berserker', 'The Cheat', 'Commander', 'Hunter', 'Mage',
+  'Oathsworn', 'Shadowmancer', 'Shepherd', 'Songweaver',
+  'Stormshifter', 'Zephyr',
+];
 
 interface PartyMembersCardProps {
   members: PartyMember[];
   editable?: boolean;
   onChange?: (members: PartyMember[]) => void;
+  campaignId?: string;
 }
 
 export function PartyMembersCard({
   members,
   editable = false,
   onChange,
+  campaignId,
 }: PartyMembersCardProps) {
   const [adding, setAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -30,24 +59,27 @@ export function PartyMembersCard({
   const [playerName, setPlayerName] = useState('');
   const [charClass, setCharClass] = useState('');
   const [race, setRace] = useState('');
+  const [imageId, setImageId] = useState('');
 
   function resetForm() {
     setCharacterName('');
     setPlayerName('');
     setCharClass('');
     setRace('');
+    setImageId('');
     setAdding(false);
     setEditingId(null);
   }
 
   function handleAdd() {
-    if (!characterName.trim() || !playerName.trim()) return;
+    if (!playerName.trim()) return;
     const member: PartyMember = {
       id: crypto.randomUUID(),
       characterName: characterName.trim(),
       playerName: playerName.trim(),
       class: charClass.trim(),
       race: race.trim(),
+      imageId: imageId || undefined,
     };
     onChange?.([...members, member]);
     resetForm();
@@ -59,10 +91,11 @@ export function PartyMembersCard({
     setPlayerName(member.playerName);
     setCharClass(member.class);
     setRace(member.race);
+    setImageId(member.imageId ?? '');
   }
 
   function handleSaveEdit() {
-    if (!characterName.trim() || !playerName.trim() || !editingId) return;
+    if (!playerName.trim() || !editingId) return;
     onChange?.(
       members.map((m) =>
         m.id === editingId
@@ -72,6 +105,7 @@ export function PartyMembersCard({
               playerName: playerName.trim(),
               class: charClass.trim(),
               race: race.trim(),
+              imageId: imageId || undefined,
             }
           : m
       )
@@ -108,10 +142,13 @@ export function PartyMembersCard({
               playerName={playerName}
               charClass={charClass}
               race={race}
+              imageId={imageId}
+              campaignId={campaignId}
               onCharacterNameChange={setCharacterName}
               onPlayerNameChange={setPlayerName}
               onClassChange={setCharClass}
               onRaceChange={setRace}
+              onImageIdChange={setImageId}
               onSave={handleSaveEdit}
               onCancel={resetForm}
               saveLabel="Save"
@@ -119,10 +156,15 @@ export function PartyMembersCard({
           ) : (
             <div
               key={member.id}
-              className="flex items-center justify-between rounded-md border p-3 group"
+              className="flex items-center gap-3 rounded-md border p-3 group"
             >
-              <div>
-                <div className="font-medium">{member.characterName}</div>
+              {member.imageId && (
+                <StoredImg imageId={member.imageId} alt={member.characterName || member.playerName} className="size-10 rounded-full object-cover object-top shrink-0" />
+              )}
+              <div className="flex-1 min-w-0">
+                <div className="font-medium">
+                  {member.characterName || <span className="text-muted-foreground italic">No character name</span>}
+                </div>
                 <div className="text-sm text-muted-foreground">
                   {[member.race, member.class].filter(Boolean).join(' ')}
                   {(member.race || member.class) && ' \u2022 '}
@@ -130,7 +172,7 @@ export function PartyMembersCard({
                 </div>
               </div>
               {editable && (
-                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                   <Button
                     variant="ghost"
                     size="sm"
@@ -159,10 +201,13 @@ export function PartyMembersCard({
               playerName={playerName}
               charClass={charClass}
               race={race}
+              imageId={imageId}
+              campaignId={campaignId}
               onCharacterNameChange={setCharacterName}
               onPlayerNameChange={setPlayerName}
               onClassChange={setCharClass}
               onRaceChange={setRace}
+              onImageIdChange={setImageId}
               onSave={handleAdd}
               onCancel={resetForm}
               saveLabel="Add"
@@ -179,10 +224,13 @@ function MemberForm({
   playerName,
   charClass,
   race,
+  imageId,
+  campaignId,
   onCharacterNameChange,
   onPlayerNameChange,
   onClassChange,
   onRaceChange,
+  onImageIdChange,
   onSave,
   onCancel,
   saveLabel,
@@ -191,10 +239,13 @@ function MemberForm({
   playerName: string;
   charClass: string;
   race: string;
+  imageId: string;
+  campaignId?: string;
   onCharacterNameChange: (v: string) => void;
   onPlayerNameChange: (v: string) => void;
   onClassChange: (v: string) => void;
   onRaceChange: (v: string) => void;
+  onImageIdChange: (v: string) => void;
   onSave: () => void;
   onCancel: () => void;
   saveLabel: string;
@@ -203,7 +254,7 @@ function MemberForm({
     <div className="space-y-3 rounded-md border p-3 bg-muted/30">
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
-          <Label className="text-xs">Character Name *</Label>
+          <Label className="text-xs">Character Name</Label>
           <Input
             value={characterName}
             onChange={(e) => onCharacterNameChange(e.target.value)}
@@ -219,22 +270,53 @@ function MemberForm({
           />
         </div>
         <div className="space-y-1">
-          <Label className="text-xs">Race</Label>
-          <Input
-            value={race}
-            onChange={(e) => onRaceChange(e.target.value)}
-            placeholder="e.g. Dwarf"
-          />
+          <Label className="text-xs">Ancestry</Label>
+          <Select value={race || null} onValueChange={(v) => onRaceChange(v ?? '')}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select ancestry" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectLabel>Common</SelectLabel>
+                {ANCESTRIES.Common.map((a) => (
+                  <SelectItem key={a} value={a}>{a}</SelectItem>
+                ))}
+              </SelectGroup>
+              <SelectGroup>
+                <SelectLabel>Exotic</SelectLabel>
+                {ANCESTRIES.Exotic.map((a) => (
+                  <SelectItem key={a} value={a}>{a}</SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
         </div>
         <div className="space-y-1">
           <Label className="text-xs">Class</Label>
-          <Input
-            value={charClass}
-            onChange={(e) => onClassChange(e.target.value)}
-            placeholder="e.g. Fighter"
-          />
+          <Select value={charClass || null} onValueChange={(v) => onClassChange(v ?? '')}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select class" />
+            </SelectTrigger>
+            <SelectContent>
+              {CLASSES.map((c) => (
+                <SelectItem key={c} value={c}>{c}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
+      {campaignId && (
+        <div className="space-y-1">
+          <Label className="text-xs">Portrait</Label>
+          <ImageSelect
+            campaignId={campaignId}
+            value={imageId}
+            onChange={onImageIdChange}
+            uploadCategory="player-portrait"
+            previewClassName="size-16 rounded-full object-cover object-top"
+          />
+        </div>
+      )}
       <div className="flex gap-2 justify-end">
         <Button variant="outline" size="sm" onClick={onCancel}>
           Cancel
@@ -242,7 +324,7 @@ function MemberForm({
         <Button
           size="sm"
           onClick={onSave}
-          disabled={!characterName.trim() || !playerName.trim()}
+          disabled={!playerName.trim()}
         >
           {saveLabel}
         </Button>

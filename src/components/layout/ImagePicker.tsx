@@ -5,14 +5,16 @@ import { ImageIcon, X, Maximize2 } from 'lucide-react';
 import { useImageStore } from '@/stores/image-store';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { StoredImg } from '@/components/ui/stored-image';
 import { openPresentWindow } from '@/lib/present-window';
-import type { ImageCategory } from '@/types';
+import type { ImageCategory, StoredImage } from '@/types';
 
-const CATEGORIES: ImageCategory[] = ['map', 'npc-portrait', 'scene', 'handout'];
+const CATEGORIES: ImageCategory[] = ['map', 'npc-portrait', 'player-portrait', 'scene', 'handout'];
 
 const CATEGORY_LABELS: Record<ImageCategory, string> = {
   map: 'Maps',
-  'npc-portrait': 'Portraits',
+  'npc-portrait': 'NPC Portraits',
+  'player-portrait': 'Players',
   scene: 'Scenes',
   handout: 'Handouts',
 };
@@ -34,6 +36,7 @@ export function ImagePicker({ campaignId }: ImagePickerProps) {
     const grouped: Record<ImageCategory, typeof campaignImages> = {
       map: [],
       'npc-portrait': [],
+      'player-portrait': [],
       scene: [],
       handout: [],
     };
@@ -100,27 +103,7 @@ export function ImagePicker({ campaignId }: ImagePickerProps) {
                 ) : (
                   <div className="grid grid-cols-3 gap-1.5 pt-2">
                     {imagesByCategory[cat].map((img) => (
-                      <button
-                        key={img.id}
-                        onClick={() => presentImage(img.id)}
-                        className="group relative aspect-square rounded overflow-hidden border hover:border-primary transition-colors cursor-pointer"
-                        title={img.name}
-                      >
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={img.dataUri}
-                          alt={img.name}
-                          className="size-full object-cover"
-                        />
-                        {/* Hover overlay */}
-                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-colors flex items-center justify-center">
-                          <Maximize2 className="size-4 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-                        </div>
-                        {/* Name label */}
-                        <div className="absolute bottom-0 inset-x-0 bg-black/70 px-1 py-0.5">
-                          <p className="text-[10px] text-white truncate">{img.name}</p>
-                        </div>
-                      </button>
+                      <PickerThumbnail key={img.id} img={img} onPresent={presentImage} />
                     ))}
                   </div>
                 )}
@@ -130,5 +113,23 @@ export function ImagePicker({ campaignId }: ImagePickerProps) {
         </div>
       )}
     </>
+  );
+}
+
+function PickerThumbnail({ img, onPresent }: { img: StoredImage; onPresent: (id: string) => void }) {
+  return (
+    <button
+      onClick={() => onPresent(img.id)}
+      className="group relative aspect-square rounded overflow-hidden border hover:border-primary transition-colors cursor-pointer"
+      title={img.name}
+    >
+      <StoredImg imageId={img.id} alt={img.name} className="size-full object-cover" />
+      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-colors flex items-center justify-center">
+        <Maximize2 className="size-4 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+      </div>
+      <div className="absolute bottom-0 inset-x-0 bg-black/70 px-1 py-0.5">
+        <p className="text-[10px] text-white truncate">{img.name}</p>
+      </div>
+    </button>
   );
 }

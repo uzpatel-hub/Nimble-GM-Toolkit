@@ -6,7 +6,7 @@ import { ArrowLeft, Trash2, Search, Plus } from "lucide-react";
 import { useEncounterStore } from "@/stores/encounter-store";
 import { useMonsterStore } from "@/stores/monster-store";
 import { useCampaignStore } from "@/stores/campaign-store";
-import { useImageStore } from "@/stores/image-store";
+import { ImageSelect } from "@/components/ui/image-select";
 import { ChatPanel } from "@/components/chat/ChatPanel";
 import { ImagePicker } from "@/components/layout/ImagePicker";
 import { openPresentWindow } from "@/lib/present-window";
@@ -64,12 +64,16 @@ export default function EncounterDetailPage() {
 
   const { encounters, updateEncounter, deleteEncounter } = useEncounterStore();
   const { monsters } = useMonsterStore();
-  const { campaigns } = useCampaignStore();
-  const { images } = useImageStore();
+  const { campaigns, sessions } = useCampaignStore();
   const campaign = campaigns.find((c) => c.id === campaignId);
-  const campaignImages = images.filter((i) => i.campaignId === campaignId);
   const encounter = encounters.find(
     (e) => e.id === encId && e.campaignId === campaignId
+  );
+  const linkedSession = sessions.find(
+    (s) =>
+      s.campaignId === campaignId &&
+      (s.linkedEncounterIds.includes(encId) ||
+        s.sessionEncounters?.some((se) => se.linkedEncounterId === encId))
   );
 
   const [name, setName] = useState("");
@@ -117,6 +121,20 @@ export default function EncounterDetailPage() {
     () => calcDifficulty(encounterMonsters, partySize, partyLevel),
     [encounterMonsters, partySize, partyLevel]
   );
+
+  const { standardCount, minionCount, ratio } = useMemo(() => {
+    let std = 0;
+    let min = 0;
+    for (const m of encounterMonsters) {
+      if (m.isMinion) min += m.count;
+      else std += m.count;
+    }
+    return {
+      standardCount: std,
+      minionCount: min,
+      ratio: partySize > 0 ? std / partySize : 0,
+    };
+  }, [encounterMonsters, partySize]);
 
   const addMonster = (monsterId: string) => {
     const monster = monsters.find((m) => m.id === monsterId);
@@ -213,6 +231,15 @@ export default function EncounterDetailPage() {
           Back
         </Button>
         <div className="flex gap-2">
+          {linkedSession && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => router.push(`/campaign/${campaignId}/session/${linkedSession.id}`)}
+            >
+              Back to Session
+            </Button>
+          )}
           <ImagePicker campaignId={campaignId} />
           {imageId && (
             <Button
@@ -319,6 +346,38 @@ export default function EncounterDetailPage() {
               <span>Deadly</span>
               <span>Very Deadly</span>
             </div>
+
+            {/* Monster-to-Hero Ratio */}
+            {encounterMonsters.length > 0 && (
+              <div className="pt-2 border-t space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">Monsters vs Heroes</span>
+                  <span className="text-sm text-muted-foreground">
+                    {standardCount}{minionCount > 0 ? ` (+${minionCount} minions)` : ""} vs {partySize}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">
+                    Ratio (excl. minions)
+                  </span>
+                  <Badge
+                    variant="secondary"
+                    className={
+                      ratio >= 1 && ratio <= 4
+                        ? "text-green-600"
+                        : ratio > 4
+                          ? "text-red-600"
+                          : "text-yellow-600"
+                    }
+                  >
+                    {ratio.toFixed(1)} : 1
+                  </Badge>
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  Sweet spot: 1-4 standard monsters per hero
+                </p>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -502,47 +561,12 @@ export default function EncounterDetailPage() {
         {/* Encounter Image */}
         <div className="space-y-2">
           <Label>Encounter Image</Label>
-          {campaignImages.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              No images uploaded yet.{" "}
-              <button
-                className="text-primary underline"
-                onClick={() => router.push(`/campaign/${campaignId}/images`)}
-              >
-                Upload images
-              </button>{" "}
-              to attach one to this encounter.
-            </p>
-          ) : (
-            <div className="space-y-3">
-              <select
-                value={imageId}
-                onChange={(e) => setImageId(e.target.value)}
-                className="w-full rounded-md border bg-background px-3 py-2 text-sm"
-              >
-                <option value="">None</option>
-                {campaignImages.map((img) => (
-                  <option key={img.id} value={img.id}>
-                    {img.name} ({img.category})
-                  </option>
-                ))}
-              </select>
-              {imageId && (() => {
-                const selectedImg = images.find((i) => i.id === imageId);
-                if (!selectedImg) return null;
-                return (
-                  <div className="rounded-lg border overflow-hidden">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={selectedImg.dataUri}
-                      alt={selectedImg.name}
-                      className="w-full max-h-48 object-contain bg-black"
-                    />
-                  </div>
-                );
-              })()}
-            </div>
-          )}
+          <ImageSelect
+            campaignId={campaignId}
+            value={imageId}
+            onChange={setImageId}
+            uploadCategory="scene"
+          />
         </div>
 
         {/* Notes */}

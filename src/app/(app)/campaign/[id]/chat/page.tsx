@@ -69,7 +69,7 @@ export default function ChatPage() {
   const params = useParams<{ id: string }>();
   const campaignId = params.id;
 
-  const { campaigns } = useCampaignStore();
+  const { campaigns, sessions } = useCampaignStore();
   const {
     conversations,
     addConversation,
@@ -77,8 +77,8 @@ export default function ChatPage() {
     deleteConversation,
   } = useChatStore();
   const { aiSettings } = useSettingsStore();
-  const { addNpc } = useNpcStore();
-  const { addNote } = useNotesStore();
+  const { npcs, addNpc } = useNpcStore();
+  const { notes: storyNotes, addNote } = useNotesStore();
 
   const campaign = campaigns.find((c) => c.id === campaignId);
   const campaignConversations = conversations
@@ -193,6 +193,48 @@ export default function ChatPage() {
           lines.push(`- ${m.characterName} (${details || 'no class/race'}) — played by ${m.playerName}`);
         }
       }
+
+      // Include session history
+      const campaignSessions = sessions
+        .filter((s) => s.campaignId === campaignId)
+        .sort((a, b) => a.number - b.number);
+      if (campaignSessions.length > 0) {
+        lines.push('\n### Session History');
+        for (const s of campaignSessions) {
+          lines.push(`\nSession #${s.number}: ${s.title} [${s.status}]`);
+          if (s.notes) lines.push(`Notes: ${s.notes.slice(0, 500)}`);
+          if (s.sessionEncounters?.length) {
+            for (const enc of s.sessionEncounters) {
+              const typeLabel = enc.type === 'battle' ? 'Battle' : enc.type === 'skill-check' ? 'Skill Check' : 'NPC Interaction';
+              lines.push(`- [${typeLabel}] ${enc.title}${enc.description ? ': ' + enc.description.slice(0, 150) : ''}`);
+            }
+          }
+        }
+      }
+
+      // Include NPCs
+      const campaignNpcs = npcs.filter((n) => n.campaignId === campaignId);
+      if (campaignNpcs.length > 0) {
+        lines.push('\n### NPCs');
+        for (const npc of campaignNpcs) {
+          lines.push(`\n**${npc.name}** — ${npc.role || 'no role'}`);
+          if (npc.description) lines.push(`Description: ${npc.description.slice(0, 200)}`);
+          if (npc.personality) lines.push(`Personality: ${npc.personality.slice(0, 200)}`);
+          if (npc.notes) lines.push(`Notes: ${npc.notes.slice(0, 200)}`);
+        }
+      }
+
+      // Include story notes
+      const campaignNotes = storyNotes.filter((n) => n.campaignId === campaignId);
+      if (campaignNotes.length > 0) {
+        lines.push('\n### Story Notes');
+        for (const note of campaignNotes) {
+          const tags = note.tags.length > 0 ? ` [${note.tags.join(', ')}]` : '';
+          lines.push(`\n**${note.title}**${tags}`);
+          if (note.content) lines.push(note.content.slice(0, 300));
+        }
+      }
+
       campaignContext = lines.join('\n');
     }
     const systemPrompt = buildSystemPrompt(

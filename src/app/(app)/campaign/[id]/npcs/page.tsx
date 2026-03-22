@@ -4,6 +4,9 @@ import { useState, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Plus, Trash2, Search, Users } from "lucide-react";
 import { useNpcStore } from "@/stores/npc-store";
+import { StoredImg } from "@/components/ui/stored-image";
+import { ImageSelect } from "@/components/ui/image-select";
+import { ShareExportDialog, ShareImportDialog } from "@/components/share/ShareExportImport";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,6 +39,7 @@ export default function NpcsPage() {
   const [newDescription, setNewDescription] = useState("");
   const [newPersonality, setNewPersonality] = useState("");
   const [newNotes, setNewNotes] = useState("");
+  const [newImageId, setNewImageId] = useState("");
 
   const filteredNpcs = useMemo(() => {
     if (!searchQuery) return campaignNpcs;
@@ -55,6 +59,7 @@ export default function NpcsPage() {
       description: newDescription,
       personality: newPersonality,
       notes: newNotes,
+      imageId: newImageId || undefined,
       linkedLocationNames: [],
       linkedSessionIds: [],
     });
@@ -63,6 +68,7 @@ export default function NpcsPage() {
     setNewDescription("");
     setNewPersonality("");
     setNewNotes("");
+    setNewImageId("");
     setDialogOpen(false);
     router.push(`/campaign/${campaignId}/npc/${id}`);
   };
@@ -72,16 +78,19 @@ export default function NpcsPage() {
       <PageHeader
         title="NPCs"
         actions={
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger
-              render={
-                <Button>
-                  <Plus data-icon="inline-start" />
-                  New NPC
-                </Button>
-              }
-            />
-            <DialogContent className="sm:max-w-md">
+          <div className="flex gap-2">
+            <ShareImportDialog campaignId={campaignId} />
+            <ShareExportDialog campaignId={campaignId} />
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <DialogTrigger
+                render={
+                  <Button>
+                    <Plus data-icon="inline-start" />
+                    New NPC
+                  </Button>
+                }
+              />
+            <DialogContent className="sm:max-w-md max-h-[90dvh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>New NPC</DialogTitle>
               </DialogHeader>
@@ -129,6 +138,15 @@ export default function NpcsPage() {
                     rows={2}
                   />
                 </div>
+                <div className="space-y-2">
+                  <Label>Portrait</Label>
+                  <ImageSelect
+                    campaignId={campaignId}
+                    value={newImageId}
+                    onChange={setNewImageId}
+                    uploadCategory="npc-portrait"
+                  />
+                </div>
               </div>
               <DialogFooter>
                 <Button onClick={handleCreate} disabled={!newName.trim()}>
@@ -137,6 +155,7 @@ export default function NpcsPage() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
+          </div>
         }
       />
 
@@ -162,36 +181,57 @@ export default function NpcsPage() {
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filteredNpcs.map((npc) => (
-            <Card
+            <NpcCard
               key={npc.id}
-              className="cursor-pointer transition-shadow hover:shadow-md"
+              npc={npc}
+              campaignId={campaignId}
+              onDelete={deleteNpc}
               onClick={() => router.push(`/campaign/${campaignId}/npc/${npc.id}`)}
-            >
-              <CardHeader>
-                <CardTitle>{npc.name}</CardTitle>
-                <CardDescription>{npc.role}</CardDescription>
-                <CardAction>
-                  <Button
-                    variant="destructive"
-                    size="icon-sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      deleteNpc(npc.id);
-                    }}
-                  >
-                    <Trash2 />
-                  </Button>
-                </CardAction>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground line-clamp-2">
-                  {npc.description || "No description"}
-                </p>
-              </CardContent>
-            </Card>
+            />
           ))}
         </div>
       )}
     </div>
+  );
+}
+
+function NpcCard({
+  npc,
+  campaignId,
+  onDelete,
+  onClick,
+}: {
+  npc: { id: string; name: string; role: string; description: string; imageId?: string };
+  campaignId: string;
+  onDelete: (id: string) => void;
+  onClick: () => void;
+}) {
+  return (
+    <Card className="cursor-pointer transition-shadow hover:shadow-md overflow-hidden" onClick={onClick}>
+      {npc.imageId && (
+        <StoredImg imageId={npc.imageId} alt={npc.name} className="h-32 w-full object-cover object-top" />
+      )}
+      <CardHeader>
+        <CardTitle>{npc.name}</CardTitle>
+        <CardDescription>{npc.role}</CardDescription>
+        <CardAction>
+          <Button
+            variant="destructive"
+            size="icon-sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(npc.id);
+            }}
+          >
+            <Trash2 />
+          </Button>
+        </CardAction>
+      </CardHeader>
+      <CardContent>
+        <p className="text-sm text-muted-foreground line-clamp-2">
+          {npc.description || "No description"}
+        </p>
+      </CardContent>
+    </Card>
   );
 }

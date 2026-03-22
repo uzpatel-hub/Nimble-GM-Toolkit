@@ -8,7 +8,7 @@ import { useCampaignStore } from '@/stores/campaign-store';
 import { useEncounterStore } from '@/stores/encounter-store';
 import { useMapStore } from '@/stores/map-store';
 import { useTreasureStore } from '@/stores/treasure-store';
-import { useImageStore } from '@/stores/image-store';
+import { ImageSelect } from '@/components/ui/image-select';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -28,11 +28,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { PartyMembersCard } from '@/components/party/PartyMembersCard';
 import { ChatPanel } from '@/components/chat/ChatPanel';
 import { ImagePicker } from '@/components/layout/ImagePicker';
 import { openPresentWindow } from '@/lib/present-window';
-import type { ChecklistItem, Encounter, Session, SessionEncounter, SessionEncounterType, StoredImage } from '@/types';
+import { Minus, Plus, RotateCcw, Check } from 'lucide-react';
+import { EncounterBudget } from '@/components/session/EncounterBudget';
+import type { ChecklistItem, Encounter, Session, SessionEncounter, SessionEncounterType } from '@/types';
 
 export default function SessionDetailPage() {
   const params = useParams<{ id: string; sid: string }>();
@@ -44,10 +45,8 @@ export default function SessionDetailPage() {
   const { encounters } = useEncounterStore();
   const { maps } = useMapStore();
   const { treasures } = useTreasureStore();
-  const { images } = useImageStore();
 
   const campaign = campaigns.find((c) => c.id === campaignId);
-  const campaignImages = images.filter((i) => i.campaignId === campaignId);
   const session = sessions.find((s) => s.id === sessionId);
 
   // Local editable state
@@ -59,13 +58,16 @@ export default function SessionDetailPage() {
   const [hasChanges, setHasChanges] = useState(false);
 
   // Session encounter form state
+  const [sessionPartyLevel, setSessionPartyLevel] = useState<number | null>(null);
   const [addingEncounter, setAddingEncounter] = useState(false);
   const [editingEncounterId, setEditingEncounterId] = useState<string | null>(null);
   const [encTitle, setEncTitle] = useState('');
   const [encType, setEncType] = useState<SessionEncounterType>('battle');
   const [encDescription, setEncDescription] = useState('');
   const [encLinkedId, setEncLinkedId] = useState('');
+  const [encNotes, setEncNotes] = useState('');
   const [encImageId, setEncImageId] = useState('');
+  const [expandedEncId, setExpandedEncId] = useState<string | null>(null);
 
   useEffect(() => {
     setActiveCampaignId(campaignId);
@@ -79,6 +81,7 @@ export default function SessionDetailPage() {
       setStatus(session.status);
       setChecklist(session.checklist);
       setSessionEncounters(session.sessionEncounters ?? []);
+      setSessionPartyLevel(session.partyLevelOverride ?? null);
       setHasChanges(false);
     }
   }, [session?.id]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -95,6 +98,7 @@ export default function SessionDetailPage() {
       status,
       checklist,
       sessionEncounters,
+      partyLevelOverride: sessionPartyLevel ?? undefined,
     });
     setHasChanges(false);
   }
@@ -134,10 +138,21 @@ export default function SessionDetailPage() {
     setEncTitle('');
     setEncType('battle');
     setEncDescription('');
+    setEncNotes('');
     setEncLinkedId('');
     setEncImageId('');
     setAddingEncounter(false);
     setEditingEncounterId(null);
+  }
+
+  function saveSessionEncounters(updated: SessionEncounter[]) {
+    setSessionEncounters(updated);
+    updateSession(sessionId, {
+      notes,
+      status,
+      checklist,
+      sessionEncounters: updated,
+    });
   }
 
   function handleAddEncounter() {
@@ -147,12 +162,12 @@ export default function SessionDetailPage() {
       title: encTitle.trim(),
       type: encType,
       description: encDescription.trim(),
+      notes: encNotes.trim() || undefined,
       linkedEncounterId: encLinkedId || undefined,
       imageId: encImageId || undefined,
     };
-    setSessionEncounters((prev) => [...prev, enc]);
+    saveSessionEncounters([...sessionEncounters, enc]);
     resetEncounterForm();
-    markChanged();
   }
 
   function handleEditEncounter(enc: SessionEncounter) {
@@ -160,46 +175,50 @@ export default function SessionDetailPage() {
     setEncTitle(enc.title);
     setEncType(enc.type);
     setEncDescription(enc.description);
+    setEncNotes(enc.notes ?? '');
     setEncLinkedId(enc.linkedEncounterId ?? '');
     setEncImageId(enc.imageId ?? '');
   }
 
   function handleSaveEditEncounter() {
     if (!encTitle.trim() || !editingEncounterId) return;
-    setSessionEncounters((prev) =>
-      prev.map((e) =>
-        e.id === editingEncounterId
-          ? {
-              ...e,
-              title: encTitle.trim(),
-              type: encType,
-              description: encDescription.trim(),
-              linkedEncounterId: encLinkedId || undefined,
-              imageId: encImageId || undefined,
-            }
-          : e
+    const updated = sessionEncounters.map((e) =>
+      e.id === editingEncounterId
+        ? {
+            ...e,
+            title: encTitle.trim(),
+            type: encType,
+            description: encDescription.trim(),
+            notes: encNotes.trim() || undefined,
+            linkedEncounterId: encLinkedId || undefined,
+            imageId: encImageId || undefined,
+          }
+        : e
+    );
+    saveSessionEncounters(updated);
+    resetEncounterForm();
+  }
+
+  function handleToggleCompleted(id: string) {
+    saveSessionEncounters(
+      sessionEncounters.map((e) =>
+        e.id === id ? { ...e, completed: !e.completed } : e
       )
     );
-    resetEncounterForm();
-    markChanged();
   }
 
   function handleDeleteEncounter(id: string) {
-    setSessionEncounters((prev) => prev.filter((e) => e.id !== id));
-    markChanged();
+    saveSessionEncounters(sessionEncounters.filter((e) => e.id !== id));
   }
 
   function handleMoveEncounter(id: string, direction: 'up' | 'down') {
-    setSessionEncounters((prev) => {
-      const idx = prev.findIndex((e) => e.id === id);
-      if (idx < 0) return prev;
-      const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
-      if (swapIdx < 0 || swapIdx >= prev.length) return prev;
-      const next = [...prev];
-      [next[idx], next[swapIdx]] = [next[swapIdx], next[idx]];
-      return next;
-    });
-    markChanged();
+    const idx = sessionEncounters.findIndex((e) => e.id === id);
+    if (idx < 0) return;
+    const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
+    if (swapIdx < 0 || swapIdx >= sessionEncounters.length) return;
+    const next = [...sessionEncounters];
+    [next[idx], next[swapIdx]] = [next[swapIdx], next[idx]];
+    saveSessionEncounters(next);
   }
 
   const ENCOUNTER_TYPE_LABELS: Record<SessionEncounterType, string> = {
@@ -263,6 +282,19 @@ export default function SessionDetailPage() {
           </div>
         }
       />
+
+      {/* Party banner */}
+      {(campaign.partyMembers?.length ?? 0) > 0 && (
+        <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-muted/30 px-4 py-2.5">
+          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider shrink-0 mr-1">Party</span>
+          {campaign.partyMembers!.map((m) => (
+            <div key={m.id} className="flex items-center gap-2 rounded-md border bg-background px-3 py-1.5">
+              <span className="font-semibold text-base">{m.characterName || '—'}</span>
+              <span className="text-sm text-muted-foreground">{m.playerName}</span>
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Main content - Notes */}
@@ -347,113 +379,140 @@ export default function SessionDetailPage() {
                     title={encTitle}
                     type={encType}
                     description={encDescription}
+                    notes={encNotes}
                     linkedId={encLinkedId}
                     imageId={encImageId}
+                    campaignId={campaignId}
                     campaignEncounters={campaignEncounters}
-                    campaignImages={campaignImages}
                     onTitleChange={setEncTitle}
                     onTypeChange={setEncType}
                     onDescriptionChange={setEncDescription}
+                    onNotesChange={setEncNotes}
                     onLinkedIdChange={setEncLinkedId}
                     onImageIdChange={setEncImageId}
                     onSave={handleSaveEditEncounter}
                     onCancel={resetEncounterForm}
                     saveLabel="Save"
                   />
-                ) : (
-                  <div
-                    key={enc.id}
-                    className="rounded-md border p-3 space-y-2 group"
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex items-center gap-2">
-                        <Badge
-                          className={`${ENCOUNTER_TYPE_COLORS[enc.type]} text-white text-xs`}
-                        >
-                          {ENCOUNTER_TYPE_LABELS[enc.type]}
-                        </Badge>
-                        <span className="font-medium">{enc.title}</span>
-                      </div>
-                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                        {idx > 0 && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 w-6 p-0"
-                            onClick={() => handleMoveEncounter(enc.id, 'up')}
+                ) : (() => {
+                  const isExpanded = expandedEncId === enc.id;
+                  return (
+                    <div
+                      key={enc.id}
+                      className={`rounded-md border p-3 space-y-2 group cursor-pointer hover:bg-muted/30 transition-colors ${enc.completed ? 'opacity-60' : ''}`}
+                      onClick={() => setExpandedEncId(isExpanded ? null : enc.id)}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <button
+                            className={`size-5 shrink-0 rounded border flex items-center justify-center transition-colors ${
+                              enc.completed
+                                ? 'bg-green-600 border-green-500 text-white'
+                                : 'border-muted-foreground/40 hover:border-green-400'
+                            }`}
+                            title={enc.completed ? 'Mark incomplete' : 'Mark completed'}
+                            onClick={(e) => { e.stopPropagation(); handleToggleCompleted(enc.id); }}
                           >
-                            ↑
-                          </Button>
-                        )}
-                        {idx < sessionEncounters.length - 1 && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 w-6 p-0"
-                            onClick={() => handleMoveEncounter(enc.id, 'down')}
+                            {enc.completed && <Check className="size-3" />}
+                          </button>
+                          <Badge
+                            className={`${ENCOUNTER_TYPE_COLORS[enc.type]} text-white text-xs`}
                           >
-                            ↓
-                          </Button>
-                        )}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-6 px-2"
-                          onClick={() => handleEditEncounter(enc)}
-                        >
-                          Edit
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-6 px-2"
-                          onClick={() => handleDeleteEncounter(enc.id)}
-                        >
-                          Remove
-                        </Button>
-                      </div>
-                    </div>
-                    {enc.description && (
-                      <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                        {enc.description}
-                      </p>
-                    )}
-                    <div className="flex items-center gap-3 flex-wrap">
-                      {enc.linkedEncounterId && (
-                        <>
-                          <Link
-                            href={`/campaign/${campaignId}/encounter/${enc.linkedEncounterId}`}
-                            className="text-xs text-primary hover:underline"
-                          >
-                            View encounter →
-                          </Link>
-                          <Link
-                            href={`/campaign/${campaignId}/encounter/${enc.linkedEncounterId}/run?from=session&sid=${sessionId}`}
-                          >
-                            <Button variant="default" size="sm" className="h-6 text-xs">
-                              Run Encounter
+                            {ENCOUNTER_TYPE_LABELS[enc.type]}
+                          </Badge>
+                          <span className={`font-medium ${enc.completed ? 'line-through text-muted-foreground' : ''}`}>{enc.title}</span>
+                        </div>
+                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" onClick={(e) => e.stopPropagation()}>
+                          {idx > 0 && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 w-6 p-0"
+                              onClick={() => handleMoveEncounter(enc.id, 'up')}
+                            >
+                              ↑
                             </Button>
-                          </Link>
-                        </>
-                      )}
-                      {enc.type === 'battle' && !enc.linkedEncounterId && (
-                        <p className="text-xs text-muted-foreground italic">
-                          Link a combat encounter to enable Run Encounter
+                          )}
+                          {idx < sessionEncounters.length - 1 && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 w-6 p-0"
+                              onClick={() => handleMoveEncounter(enc.id, 'down')}
+                            >
+                              ↓
+                            </Button>
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 px-2"
+                            onClick={() => handleEditEncounter(enc)}
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 px-2"
+                            onClick={() => handleDeleteEncounter(enc.id)}
+                          >
+                            Remove
+                          </Button>
+                        </div>
+                      </div>
+                      {enc.description && (
+                        <p className="text-sm text-muted-foreground whitespace-pre-wrap pl-5">
+                          {enc.description}
                         </p>
                       )}
-                      {enc.imageId && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-6 text-xs"
-                          onClick={() => openPresentWindow(`/present?img=${enc.imageId}`)}
-                        >
-                          Present to Players
-                        </Button>
+                      {isExpanded && (
+                        <div className="pl-5 space-y-2">
+                          {enc.notes && (
+                            <div className="rounded border bg-muted/30 p-2">
+                              <p className="text-xs font-semibold text-muted-foreground mb-1">Notes</p>
+                              <p className="text-sm whitespace-pre-wrap">{enc.notes}</p>
+                            </div>
+                          )}
+                          <div className="flex items-center gap-3 flex-wrap" onClick={(e) => e.stopPropagation()}>
+                            {enc.linkedEncounterId && (
+                              <>
+                                <Link
+                                  href={`/campaign/${campaignId}/encounter/${enc.linkedEncounterId}`}
+                                  className="text-xs text-primary hover:underline"
+                                >
+                                  View encounter →
+                                </Link>
+                                <Link
+                                  href={`/campaign/${campaignId}/encounter/${enc.linkedEncounterId}/run?from=session&sid=${sessionId}`}
+                                >
+                                  <Button variant="default" size="sm" className="h-6 text-xs">
+                                    Run Encounter
+                                  </Button>
+                                </Link>
+                              </>
+                            )}
+                            {enc.type === 'battle' && !enc.linkedEncounterId && (
+                              <p className="text-xs text-muted-foreground italic">
+                                Link a combat encounter to enable Run Encounter
+                              </p>
+                            )}
+                            {enc.imageId && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-6 text-xs"
+                                onClick={() => openPresentWindow(`/present?img=${enc.imageId}`)}
+                              >
+                                Present to Players
+                              </Button>
+                            )}
+                          </div>
+                        </div>
                       )}
                     </div>
-                  </div>
-                )
+                  );
+                })()
               )}
 
               {addingEncounter && (
@@ -463,13 +522,15 @@ export default function SessionDetailPage() {
                     title={encTitle}
                     type={encType}
                     description={encDescription}
+                    notes={encNotes}
                     linkedId={encLinkedId}
                     imageId={encImageId}
+                    campaignId={campaignId}
                     campaignEncounters={campaignEncounters}
-                    campaignImages={campaignImages}
                     onTitleChange={setEncTitle}
                     onTypeChange={setEncType}
                     onDescriptionChange={setEncDescription}
+                    onNotesChange={setEncNotes}
                     onLinkedIdChange={setEncLinkedId}
                     onImageIdChange={setEncImageId}
                     onSave={handleAddEncounter}
@@ -484,10 +545,74 @@ export default function SessionDetailPage() {
 
         {/* Sidebar */}
         <div className="space-y-6">
-          {/* Party Members */}
-          {(campaign.partyMembers?.length ?? 0) > 0 && (
-            <PartyMembersCard members={campaign.partyMembers ?? []} />
-          )}
+          {/* Encounter Budget */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Encounter Budget</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Party level for this session */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-medium">Session Party Level</p>
+                  {sessionPartyLevel != null && sessionPartyLevel !== campaign.partyLevel && (
+                    <p className="text-[10px] text-muted-foreground">
+                      Campaign level: {campaign.partyLevel}
+                    </p>
+                  )}
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="size-7"
+                    disabled={(sessionPartyLevel ?? campaign.partyLevel) <= 1}
+                    onClick={() => {
+                      const newLevel = Math.max(1, (sessionPartyLevel ?? campaign.partyLevel) - 1);
+                      setSessionPartyLevel(newLevel);
+                      updateSession(sessionId, { partyLevelOverride: newLevel });
+                    }}
+                  >
+                    <Minus className="size-3" />
+                  </Button>
+                  <span className="text-lg font-bold w-6 text-center">
+                    {sessionPartyLevel ?? campaign.partyLevel}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="size-7"
+                    disabled={(sessionPartyLevel ?? campaign.partyLevel) >= 20}
+                    onClick={() => {
+                      const newLevel = Math.min(20, (sessionPartyLevel ?? campaign.partyLevel) + 1);
+                      setSessionPartyLevel(newLevel);
+                      updateSession(sessionId, { partyLevelOverride: newLevel });
+                    }}
+                  >
+                    <Plus className="size-3" />
+                  </Button>
+                  {sessionPartyLevel != null && sessionPartyLevel !== campaign.partyLevel && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="size-7"
+                      title="Reset to campaign level"
+                      onClick={() => { setSessionPartyLevel(null); updateSession(sessionId, { partyLevelOverride: undefined }); }}
+                    >
+                      <RotateCcw className="size-3" />
+                    </Button>
+                  )}
+                </div>
+              </div>
+              <Separator />
+              <EncounterBudget
+                partySize={campaign.partyMembers?.length || campaign.partySize}
+                partyLevel={sessionPartyLevel ?? campaign.partyLevel}
+                sessionEncounters={sessionEncounters}
+                encounters={campaignEncounters}
+              />
+            </CardContent>
+          </Card>
 
           {/* Checklist */}
           <Card>
@@ -660,13 +785,15 @@ function EncounterForm({
   title,
   type,
   description,
+  notes,
   linkedId,
   imageId,
+  campaignId,
   campaignEncounters,
-  campaignImages,
   onTitleChange,
   onTypeChange,
   onDescriptionChange,
+  onNotesChange,
   onLinkedIdChange,
   onImageIdChange,
   onSave,
@@ -676,13 +803,15 @@ function EncounterForm({
   title: string;
   type: SessionEncounterType;
   description: string;
+  notes: string;
   linkedId: string;
   imageId: string;
+  campaignId: string;
   campaignEncounters: Encounter[];
-  campaignImages: StoredImage[];
   onTitleChange: (v: string) => void;
   onTypeChange: (v: SessionEncounterType) => void;
   onDescriptionChange: (v: string) => void;
+  onNotesChange: (v: string) => void;
   onLinkedIdChange: (v: string) => void;
   onImageIdChange: (v: string) => void;
   onSave: () => void;
@@ -718,11 +847,21 @@ function EncounterForm({
         </div>
       </div>
       <div className="space-y-1">
-        <Label className="text-xs">Description / Notes</Label>
+        <Label className="text-xs">Description</Label>
         <Textarea
           value={description}
           onChange={(e) => onDescriptionChange(e.target.value)}
-          placeholder="Describe this encounter..."
+          placeholder="Brief description of this encounter..."
+          rows={2}
+          className="resize-y"
+        />
+      </div>
+      <div className="space-y-1">
+        <Label className="text-xs">Notes</Label>
+        <Textarea
+          value={notes}
+          onChange={(e) => onNotesChange(e.target.value)}
+          placeholder="GM notes, reminders, tactics..."
           rows={3}
           className="resize-y"
         />
@@ -748,23 +887,15 @@ function EncounterForm({
           </Select>
         </div>
       )}
-      {campaignImages.length > 0 && (
-        <div className="space-y-1">
-          <Label className="text-xs">Image (optional)</Label>
-          <select
-            value={imageId}
-            onChange={(e) => onImageIdChange(e.target.value)}
-            className="w-full rounded-md border bg-background px-3 py-2 text-sm"
-          >
-            <option value="">None</option>
-            {campaignImages.map((img) => (
-              <option key={img.id} value={img.id}>
-                {img.name} ({img.category})
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
+      <div className="space-y-1">
+        <Label className="text-xs">Image (optional)</Label>
+        <ImageSelect
+          campaignId={campaignId}
+          value={imageId}
+          onChange={onImageIdChange}
+          uploadCategory="scene"
+        />
+      </div>
       <div className="flex gap-2 justify-end">
         <Button variant="outline" size="sm" onClick={onCancel}>
           Cancel

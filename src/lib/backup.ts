@@ -1,4 +1,5 @@
 import { getCurrentUser } from './user-storage';
+import { getAllImageBlobs, putAllImageBlobs } from './image-db';
 
 const STORE_KEYS = [
   'nimble-gm-campaigns',
@@ -14,13 +15,14 @@ const STORE_KEYS = [
 ];
 
 interface BackupData {
-  version: 1;
+  version: 2;
   username: string;
   exportedAt: string;
   stores: Record<string, unknown>;
+  imageBlobs?: Record<string, string>;
 }
 
-export function exportBackup(): string {
+export async function exportBackup(): Promise<string> {
   const username = getCurrentUser();
   if (!username) throw new Error('No user logged in');
 
@@ -36,18 +38,21 @@ export function exportBackup(): string {
     }
   }
 
+  const imageBlobs = await getAllImageBlobs();
+
   const backup: BackupData = {
-    version: 1,
+    version: 2,
     username,
     exportedAt: new Date().toISOString(),
     stores,
+    imageBlobs,
   };
 
   return JSON.stringify(backup, null, 2);
 }
 
-export function downloadBackup() {
-  const json = exportBackup();
+export async function downloadBackup() {
+  const json = await exportBackup();
   const username = getCurrentUser() ?? 'unknown';
   const date = new Date().toISOString().slice(0, 10);
   const filename = `nimble-gm-backup-${username}-${date}.json`;
@@ -61,10 +66,10 @@ export function downloadBackup() {
   URL.revokeObjectURL(url);
 }
 
-export function importBackup(json: string): { username: string; storeCount: number } {
-  const data: BackupData = JSON.parse(json);
+export async function importBackup(json: string): Promise<{ username: string; storeCount: number }> {
+  const data = JSON.parse(json) as BackupData;
 
-  if (!data.version || !data.stores || !data.username) {
+  if (!data.stores || !data.username) {
     throw new Error('Invalid backup file');
   }
 
@@ -80,6 +85,11 @@ export function importBackup(json: string): { username: string; storeCount: numb
       localStorage.setItem(`${key}:${username}`, value);
       storeCount++;
     }
+  }
+
+  // Restore image blobs to IndexedDB
+  if (data.imageBlobs && Object.keys(data.imageBlobs).length > 0) {
+    await putAllImageBlobs(data.imageBlobs);
   }
 
   return { username: data.username, storeCount };

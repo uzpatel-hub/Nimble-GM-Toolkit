@@ -26,6 +26,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { BackupRestoreCard } from '@/components/layout/BackupRestore';
 
 export default function HomePage() {
   const mounted = useMounted();
@@ -228,6 +229,11 @@ export default function HomePage() {
           ))}
         </div>
       )}
+
+      {/* Backup & Restore */}
+      <div className="max-w-2xl">
+        <BackupRestoreCard />
+      </div>
     </div>
   );
 }

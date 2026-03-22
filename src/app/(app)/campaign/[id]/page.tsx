@@ -18,7 +18,11 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Minus, Plus } from 'lucide-react';
 import { PartyMembersCard } from '@/components/party/PartyMembersCard';
+import { StoredImg } from '@/components/ui/stored-image';
+import { ShareExportDialog, ShareImportDialog } from '@/components/share/ShareExportImport';
 import type { PartyMember } from '@/types';
 
 export default function CampaignDashboard() {
@@ -114,6 +118,56 @@ export default function CampaignDashboard() {
       <PageHeader
         title={campaign.name}
         description={campaign.description || `Party of ${campaign.partyMembers?.length || campaign.partySize} at level ${campaign.partyLevel}`}
+        actions={
+          <div className="flex gap-2">
+            <ShareImportDialog campaignId={campaignId} />
+            <ShareExportDialog campaignId={campaignId} />
+          </div>
+        }
+      />
+
+      {/* Party */}
+      <Card>
+        <CardContent className="pt-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium">Party Level</p>
+              <p className="text-xs text-muted-foreground">
+                {campaign.partyMembers?.length || campaign.partySize} players at level {campaign.partyLevel}
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                className="size-8"
+                disabled={campaign.partyLevel <= 1}
+                onClick={() => updateCampaign(campaignId, { partyLevel: campaign.partyLevel - 1 })}
+              >
+                <Minus className="size-4" />
+              </Button>
+              <span className="text-2xl font-bold w-8 text-center">{campaign.partyLevel}</span>
+              <Button
+                variant="outline"
+                size="icon"
+                className="size-8"
+                disabled={campaign.partyLevel >= 20}
+                onClick={() => updateCampaign(campaignId, { partyLevel: campaign.partyLevel + 1 })}
+              >
+                <Plus className="size-4" />
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <PartyMembersCard
+        members={campaign.partyMembers ?? []}
+        editable
+        campaignId={campaignId}
+        onChange={(members: PartyMember[]) =>
+          updateCampaign(campaignId, { partyMembers: members })
+        }
       />
 
       {/* Quick Stats */}
@@ -200,15 +254,6 @@ export default function CampaignDashboard() {
           </CardContent>
         </Card>
       )}
-
-      {/* Party Members */}
-      <PartyMembersCard
-        members={campaign.partyMembers ?? []}
-        editable
-        onChange={(members: PartyMember[]) =>
-          updateCampaign(campaignId, { partyMembers: members })
-        }
-      />
 
       {/* Quick Links */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

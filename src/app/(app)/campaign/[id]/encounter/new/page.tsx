@@ -6,7 +6,7 @@ import { ArrowLeft, Plus, Trash2, Search } from "lucide-react";
 import { useEncounterStore } from "@/stores/encounter-store";
 import { useMonsterStore } from "@/stores/monster-store";
 import { useCampaignStore } from "@/stores/campaign-store";
-import { useImageStore } from "@/stores/image-store";
+import { ImageSelect } from "@/components/ui/image-select";
 import type { EncounterMonster, DifficultyRating } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -61,9 +61,7 @@ export default function EncounterNewPage() {
   const { addEncounter } = useEncounterStore();
   const { monsters } = useMonsterStore();
   const { campaigns } = useCampaignStore();
-  const { images } = useImageStore();
   const campaign = campaigns.find((c) => c.id === campaignId);
-  const campaignImages = images.filter((i) => i.campaignId === campaignId);
 
   const [name, setName] = useState("");
   const [partySize, setPartySize] = useState(campaign?.partySize ?? 4);
@@ -436,47 +434,12 @@ export default function EncounterNewPage() {
         {/* Encounter Image */}
         <div className="space-y-2">
           <Label>Encounter Image</Label>
-          {campaignImages.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              No images uploaded yet.{" "}
-              <button
-                className="text-primary underline"
-                onClick={() => router.push(`/campaign/${campaignId}/images`)}
-              >
-                Upload images
-              </button>{" "}
-              to attach one to this encounter.
-            </p>
-          ) : (
-            <div className="space-y-3">
-              <select
-                value={imageId}
-                onChange={(e) => setImageId(e.target.value)}
-                className="w-full rounded-md border bg-background px-3 py-2 text-sm"
-              >
-                <option value="">None</option>
-                {campaignImages.map((img) => (
-                  <option key={img.id} value={img.id}>
-                    {img.name} ({img.category})
-                  </option>
-                ))}
-              </select>
-              {imageId && (() => {
-                const selectedImg = images.find((i) => i.id === imageId);
-                if (!selectedImg) return null;
-                return (
-                  <div className="rounded-lg border overflow-hidden">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={selectedImg.dataUri}
-                      alt={selectedImg.name}
-                      className="w-full max-h-48 object-contain bg-black"
-                    />
-                  </div>
-                );
-              })()}
-            </div>
-          )}
+          <ImageSelect
+            campaignId={campaignId}
+            value={imageId}
+            onChange={setImageId}
+            uploadCategory="scene"
+          />
         </div>
 
         {/* Notes */}

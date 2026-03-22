@@ -3,7 +3,7 @@
 import { useState, useMemo, useRef, useCallback } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Shield, Check, Swords, Heart } from "lucide-react";
 import { useEncounterStore } from "@/stores/encounter-store";
 import { useMonsterStore } from "@/stores/monster-store";
 import { useCampaignStore } from "@/stores/campaign-store";
@@ -12,17 +12,27 @@ import { openPresentWindow } from "@/lib/present-window";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 
+import { CONDITIONS as RULES_CONDITIONS } from "@/data/rules";
 import type { Monster, MonsterAbility } from "@/types";
 
-interface MonsterInstance {
+/** Map condition name → description for quick lookup */
+const CONDITION_DESCRIPTIONS: Record<string, string> = Object.fromEntries(
+  RULES_CONDITIONS.map((c) => [c.name, c.description])
+);
+
+interface TrackedEntity {
   instanceId: string;
-  monster: Monster;
+  label: string;
+  kind: "monster" | "player";
+  /** Only for monsters */
+  monster?: Monster;
   currentHp: number;
   maxHp: number;
   isMinion: boolean;
   conditions: string[];
-  label: string;
+  turnTaken: boolean;
 }
 
 const ARMOR_LABELS: Record<string, string> = { none: "None", medium: "Medium", heavy: "Heavy" };
@@ -32,10 +42,7 @@ const ARMOR_DESC: Record<string, string> = {
   heavy: "Half dice, ignore modifiers",
 };
 
-const CONDITIONS = [
-  "Blinded", "Bloodied", "Charmed", "Dazed", "Frightened", "Grappled",
-  "Incapacitated", "Invisible", "Poisoned", "Prone", "Restrained", "Slowed", "Taunted",
-];
+const CONDITIONS = RULES_CONDITIONS.map((c) => c.name);
 
 export default function RunEncounterPage() {
   const params = useParams<{ id: string; encId: string }>();
@@ -43,54 +50,91 @@ export default function RunEncounterPage() {
   const searchParams = useSearchParams();
   const campaignId = params.id;
   const encId = params.encId;
+  const querySessionId = searchParams.get("sid");
   const fromSession = searchParams.get("from") === "session";
-  const sessionId = searchParams.get("sid");
 
   const { encounters } = useEncounterStore();
   const { monsters: allMonsters } = useMonsterStore();
-  const { campaigns } = useCampaignStore();
+  const { campaigns, sessions } = useCampaignStore();
 
   const encounter = encounters.find((e) => e.id === encId && e.campaignId === campaignId);
   const campaign = campaigns.find((c) => c.id === campaignId);
+  const linkedSession = sessions.find(
+    (s) =>
+      s.campaignId === campaignId &&
+      (s.linkedEncounterIds.includes(encId) ||
+        s.sessionEncounters?.some((se) => se.linkedEncounterId === encId))
+  );
+  const sessionId = querySessionId || linkedSession?.id;
 
-  const initialInstances = useMemo(() => {
-    if (!encounter) return [];
-    const instances: MonsterInstance[] = [];
-    for (const em of encounter.monsters) {
-      const monster = allMonsters.find((m) => m.id === em.monsterId);
-      if (!monster) continue;
-      for (let i = 0; i < em.count; i++) {
-        instances.push({
-          instanceId: `${em.monsterId}-${i}`,
-          monster,
-          currentHp: em.isMinion ? 1 : monster.hp,
-          maxHp: em.isMinion ? 1 : monster.hp,
-          isMinion: em.isMinion,
+  const { initialMonsters, initialPlayers } = useMemo(() => {
+    const monsters: TrackedEntity[] = [];
+    const players: TrackedEntity[] = [];
+
+    if (encounter) {
+      for (const em of encounter.monsters) {
+        const monster = allMonsters.find((m) => m.id === em.monsterId);
+        if (!monster) continue;
+        for (let i = 0; i < em.count; i++) {
+          monsters.push({
+            instanceId: `${em.monsterId}-${i}`,
+            label: em.count > 1 ? `${monster.name} ${i + 1}` : monster.name,
+            kind: "monster",
+            monster,
+            currentHp: em.isMinion ? 1 : monster.hp,
+            maxHp: em.isMinion ? 1 : monster.hp,
+            isMinion: em.isMinion,
+            conditions: [],
+            turnTaken: false,
+          });
+        }
+      }
+    }
+
+    if (campaign) {
+      for (const pm of campaign.partyMembers ?? []) {
+        players.push({
+          instanceId: `player-${pm.id}`,
+          label: pm.characterName || pm.playerName,
+          kind: "player",
+          currentHp: 0,
+          maxHp: 0,
+          isMinion: false,
           conditions: [],
-          label: em.count > 1 ? `${monster.name} ${i + 1}` : monster.name,
+          turnTaken: false,
         });
       }
     }
-    return instances;
-  }, [encounter, allMonsters]);
 
-  const [instances, setInstances] = useState<MonsterInstance[]>(initialInstances);
+    return { initialMonsters: monsters, initialPlayers: players };
+  }, [encounter, allMonsters, campaign]);
+
+  const [monsters, setMonsters] = useState<TrackedEntity[]>(initialMonsters);
+  const [players, setPlayers] = useState<TrackedEntity[]>(initialPlayers);
   const [damageInputs, setDamageInputs] = useState<Record<string, string>>({});
-  const [selectedId, setSelectedId] = useState<string | null>(initialInstances[0]?.instanceId ?? null);
+  const [editingHpId, setEditingHpId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(initialMonsters[0]?.instanceId ?? null);
   const [round, setRound] = useState(1);
+  const hpInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+
+  // Selected entity from either list
+  const selectedEntity = useMemo(
+    () => monsters.find((i) => i.instanceId === selectedId) ?? players.find((i) => i.instanceId === selectedId),
+    [monsters, players, selectedId]
+  );
 
   // Unique monsters for the right panel (deduplicated by monster id)
   const uniqueMonsters = useMemo(() => {
     const seen = new Set<string>();
     const result: Monster[] = [];
-    for (const inst of instances) {
-      if (!seen.has(inst.monster.id)) {
+    for (const inst of monsters) {
+      if (inst.monster && !seen.has(inst.monster.id)) {
         seen.add(inst.monster.id);
         result.push(inst.monster);
       }
     }
     return result;
-  }, [instances]);
+  }, [monsters]);
 
   const detailRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const detailPanelRef = useRef<HTMLDivElement | null>(null);
@@ -114,16 +158,14 @@ export default function RunEncounterPage() {
     );
   }
 
-  function handleSelectInstance(instanceId: string) {
+  function handleSelectEntity(instanceId: string) {
     setSelectedId(instanceId);
-    const inst = instances.find((i) => i.instanceId === instanceId);
-    if (inst) scrollToMonster(inst.monster.id);
+    const inst = monsters.find((i) => i.instanceId === instanceId);
+    if (inst?.monster) scrollToMonster(inst.monster.id);
   }
 
-  const selectedInst = instances.find((i) => i.instanceId === selectedId);
-
   function applyDamage(instanceId: string, amount: number) {
-    setInstances((prev) =>
+    setMonsters((prev) =>
       prev.map((inst) => {
         if (inst.instanceId !== instanceId) return inst;
         if (inst.isMinion && amount > 0) return { ...inst, currentHp: 0 };
@@ -138,24 +180,59 @@ export default function RunEncounterPage() {
   }
 
   function toggleCondition(instanceId: string, condition: string) {
-    setInstances((prev) =>
+    const updater = (prev: TrackedEntity[]) =>
       prev.map((inst) => {
         if (inst.instanceId !== instanceId) return inst;
         const conditions = inst.conditions.includes(condition)
           ? inst.conditions.filter((c) => c !== condition)
           : [...inst.conditions, condition];
         return { ...inst, conditions };
-      })
-    );
+      });
+
+    // Update whichever list contains this entity
+    if (monsters.some((m) => m.instanceId === instanceId)) {
+      setMonsters(updater);
+    } else {
+      setPlayers(updater);
+    }
+  }
+
+  function toggleTurn(instanceId: string) {
+    const updater = (prev: TrackedEntity[]) =>
+      prev.map((inst) =>
+        inst.instanceId === instanceId ? { ...inst, turnTaken: !inst.turnTaken } : inst
+      );
+    if (monsters.some((m) => m.instanceId === instanceId)) {
+      setMonsters(updater);
+    } else {
+      setPlayers(updater);
+    }
+  }
+
+  function resetTurns() {
+    setMonsters((prev) => prev.map((m) => ({ ...m, turnTaken: false })));
+    setPlayers((prev) => prev.map((p) => ({ ...p, turnTaken: false })));
+  }
+
+  function nextRound() {
+    setRound((r) => r + 1);
+    resetTurns();
+  }
+
+  function prevRound() {
+    setRound((r) => Math.max(1, r - 1));
+    resetTurns();
   }
 
   function resetAll() {
-    setInstances(initialInstances);
+    setMonsters(initialMonsters);
+    setPlayers(initialPlayers);
     setDamageInputs({});
     setRound(1);
+    setSelectedId(initialMonsters[0]?.instanceId ?? null);
   }
 
-  const aliveCount = instances.filter((i) => i.currentHp > 0).length;
+  const aliveCount = monsters.filter((i) => i.currentHp > 0).length;
 
   return (
     <div className="flex flex-col h-[100dvh]">
@@ -168,7 +245,7 @@ export default function RunEncounterPage() {
           </Button>
           <span className="font-bold">{encounter.name}</span>
           <span className="text-sm text-muted-foreground">
-            R{round} &bull; {aliveCount}/{instances.length} alive
+            R{round} &bull; {aliveCount}/{monsters.length} alive
           </span>
         </div>
         <div className="flex gap-1">
@@ -179,16 +256,16 @@ export default function RunEncounterPage() {
               Present to Players
             </Button>
           )}
-          {fromSession && sessionId && (
+          {sessionId && (
             <Button variant="outline" size="sm"
               onClick={() => router.push(`/campaign/${campaignId}/session/${sessionId}`)}>
               Back to Session
             </Button>
           )}
-          <Button variant="outline" size="sm" onClick={() => setRound((r) => Math.max(1, r - 1))}>
+          <Button variant="outline" size="sm" onClick={prevRound}>
             − Round
           </Button>
-          <Button variant="outline" size="sm" onClick={() => setRound((r) => r + 1)}>
+          <Button variant="outline" size="sm" onClick={nextRound}>
             + Round
           </Button>
           <Button variant="destructive" size="sm" onClick={resetAll}>Reset</Button>
@@ -197,10 +274,71 @@ export default function RunEncounterPage() {
 
       {/* Two-panel layout */}
       <div className="flex flex-1 min-h-0 overflow-hidden">
-        {/* LEFT: Monster tracker */}
+        {/* LEFT: Tracker */}
         <div className="w-1/2 border-r overflow-y-auto">
+          {/* Players section */}
+          {players.length > 0 && (
+            <>
+              <div className="px-3 py-1 bg-blue-950/30 border-b">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-blue-400 flex items-center gap-1">
+                  <Shield className="size-3" /> Party
+                </span>
+              </div>
+              <div className="divide-y">
+                {players.map((player) => {
+                  const isSelected = selectedId === player.instanceId;
+                  return (
+                    <div
+                      key={player.instanceId}
+                      className={`px-3 py-1.5 cursor-pointer transition-colors flex items-center gap-2 ${
+                        player.turnTaken ? "opacity-50" : ""
+                      } ${isSelected ? "bg-muted" : "hover:bg-muted/50"}`}
+                      onClick={() => handleSelectEntity(player.instanceId)}
+                    >
+                      <button
+                        className={`size-5 shrink-0 rounded border flex items-center justify-center transition-colors ${
+                          player.turnTaken
+                            ? "bg-blue-600 border-blue-500 text-white"
+                            : "border-muted-foreground/40 hover:border-blue-400"
+                        }`}
+                        title={player.turnTaken ? "Mark turn not taken" : "Mark turn taken"}
+                        onClick={(e) => { e.stopPropagation(); toggleTurn(player.instanceId); }}
+                      >
+                        {player.turnTaken && <Check className="size-3" />}
+                      </button>
+                      <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                        <span className={`font-medium text-sm truncate text-blue-300 ${player.turnTaken ? "line-through" : ""}`}>
+                          {player.label}
+                        </span>
+                        {player.conditions.map((c) => (
+                          <button
+                            key={c}
+                            className="text-[10px] bg-red-900/50 text-red-300 rounded px-1 shrink-0 hover:bg-red-700/60 hover:line-through transition-colors"
+                            title={`${c} — click to remove`}
+                            onClick={(e) => { e.stopPropagation(); toggleCondition(player.instanceId, c); }}
+                          >
+                            {c}
+                          </button>
+                        ))}
+                      </div>
+                      {player.conditions.length === 0 && (
+                        <span className="text-[10px] text-muted-foreground">No conditions</span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
+
+          {/* Monsters section */}
+          <div className="px-3 py-1 bg-red-950/30 border-b border-t">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-red-400">
+              Monsters
+            </span>
+          </div>
           <div className="divide-y">
-            {instances.map((inst) => {
+            {monsters.map((inst) => {
               const isDead = inst.currentHp <= 0;
               const hpPct = inst.maxHp > 0 ? (inst.currentHp / inst.maxHp) * 100 : 0;
               const dmg = damageInputs[inst.instanceId] ?? "";
@@ -210,36 +348,42 @@ export default function RunEncounterPage() {
                 <div
                   key={inst.instanceId}
                   className={`px-3 py-1.5 cursor-pointer transition-colors flex items-center gap-2 ${
-                    isDead ? "opacity-40" : ""
+                    isDead ? "opacity-40" : inst.turnTaken ? "opacity-50" : ""
                   } ${isSelected ? "bg-muted" : "hover:bg-muted/50"}`}
-                  onClick={() => handleSelectInstance(inst.instanceId)}
+                  onClick={() => handleSelectEntity(inst.instanceId)}
                 >
+                  {/* Turn taken checkbox */}
+                  <button
+                    className={`size-5 shrink-0 rounded border flex items-center justify-center transition-colors ${
+                      inst.turnTaken
+                        ? "bg-green-600 border-green-500 text-white"
+                        : "border-muted-foreground/40 hover:border-green-400"
+                    }`}
+                    title={inst.turnTaken ? "Mark turn not taken" : "Mark turn taken"}
+                    onClick={(e) => { e.stopPropagation(); toggleTurn(inst.instanceId); }}
+                  >
+                    {inst.turnTaken && <Check className="size-3" />}
+                  </button>
+
                   {/* Name + conditions */}
                   <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                    <span className={`font-medium text-sm truncate ${isDead ? "line-through" : ""}`}>
+                    <span className={`font-medium text-sm truncate ${isDead ? "line-through" : inst.turnTaken ? "line-through text-muted-foreground" : ""}`}>
                       {inst.label}
                     </span>
                     {inst.conditions.map((c) => (
-                      <span key={c} className="text-[10px] bg-red-900/50 text-red-300 rounded px-1 shrink-0">
+                      <button
+                        key={c}
+                        className="text-[10px] bg-red-900/50 text-red-300 rounded px-1 shrink-0 hover:bg-red-700/60 hover:line-through transition-colors"
+                        title={`${c} — click to remove`}
+                        onClick={(e) => { e.stopPropagation(); toggleCondition(inst.instanceId, c); }}
+                      >
                         {c}
-                      </span>
+                      </button>
                     ))}
                   </div>
 
-                  {/* Damage input + HP */}
+                  {/* HP display / controls */}
                   <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
-                    <Input
-                      type="number"
-                      value={dmg}
-                      onChange={(e) => setDamageInputs((p) => ({ ...p, [inst.instanceId]: e.target.value }))}
-                      placeholder="±"
-                      className="w-12 h-6 text-xs text-center"
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && dmg) {
-                          applyDamage(inst.instanceId, Number(dmg));
-                        }
-                      }}
-                    />
                     {inst.isMinion ? (
                       isDead ? (
                         <span className="text-xs text-red-500 font-mono w-10 text-center">Dead</span>
@@ -247,22 +391,78 @@ export default function RunEncounterPage() {
                         <Button variant="destructive" size="sm" className="h-6 text-xs px-2"
                           onClick={() => applyDamage(inst.instanceId, 1)}>Kill</Button>
                       )
+                    ) : editingHpId === inst.instanceId ? (
+                      /* Expanded edit mode */
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="default"
+                          size="sm"
+                          className="h-7 px-2 text-xs bg-red-600 hover:bg-red-500"
+                          disabled={!dmg}
+                          onClick={() => {
+                            if (dmg) applyDamage(inst.instanceId, Math.abs(Number(dmg)));
+                            setEditingHpId(null);
+                          }}
+                        >
+                          <Swords className="size-3 mr-1" /> Dmg
+                        </Button>
+                        <Input
+                          ref={(el) => { hpInputRefs.current[inst.instanceId] = el; }}
+                          type="number"
+                          value={dmg}
+                          onChange={(e) => setDamageInputs((p) => ({ ...p, [inst.instanceId]: e.target.value }))}
+                          placeholder="Amount"
+                          className="w-20 h-7 text-sm text-center"
+                          autoFocus
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" && dmg) {
+                              applyDamage(inst.instanceId, Number(dmg));
+                              setEditingHpId(null);
+                            }
+                            if (e.key === "Escape") setEditingHpId(null);
+                          }}
+                          onBlur={() => {
+                            // Small delay so button clicks register first
+                            setTimeout(() => setEditingHpId((cur) => cur === inst.instanceId ? null : cur), 150);
+                          }}
+                        />
+                        <Button
+                          variant="default"
+                          size="sm"
+                          className="h-7 px-2 text-xs bg-green-600 hover:bg-green-500"
+                          disabled={!dmg}
+                          onClick={() => {
+                            if (dmg) applyDamage(inst.instanceId, -Math.abs(Number(dmg)));
+                            setEditingHpId(null);
+                          }}
+                        >
+                          <Heart className="size-3 mr-1" /> Heal
+                        </Button>
+                      </div>
                     ) : (
-                      <>
-                        <div className="w-16 h-1.5 rounded-full bg-muted overflow-hidden">
+                      /* Compact display mode — click to edit */
+                      <button
+                        className="flex items-center gap-1.5 rounded px-1.5 py-0.5 -my-0.5 hover:bg-muted/80 transition-colors"
+                        title="Click to adjust HP"
+                        onClick={() => {
+                          setEditingHpId(inst.instanceId);
+                          setDamageInputs((p) => ({ ...p, [inst.instanceId]: "" }));
+                        }}
+                      >
+                        <div className="w-20 h-2 rounded-full bg-muted overflow-hidden">
                           <div
-                            className={`h-full rounded-full ${
+                            className={`h-full rounded-full transition-all ${
                               isDead ? "bg-red-700" : hpPct <= 25 ? "bg-red-500" : hpPct <= 50 ? "bg-yellow-500" : "bg-green-500"
                             }`}
                             style={{ width: `${hpPct}%` }}
                           />
                         </div>
-                        <span className={`text-xs font-mono w-14 text-right ${
+                        <span className={`text-sm font-mono ${
                           isDead ? "text-red-500" : hpPct <= 50 ? "text-yellow-500" : "text-muted-foreground"
                         }`}>
                           {inst.currentHp}/{inst.maxHp}
                         </span>
-                      </>
+                      </button>
                     )}
                   </div>
                 </div>
@@ -279,10 +479,10 @@ export default function RunEncounterPage() {
           )}
         </div>
 
-        {/* RIGHT: All monster stat blocks */}
+        {/* RIGHT: All monster stat blocks + conditions */}
         <div className="w-1/2 overflow-y-auto p-4 space-y-4" ref={detailPanelRef}>
           {uniqueMonsters.map((m) => {
-            const isHighlighted = selectedInst?.monster.id === m.id;
+            const isHighlighted = selectedEntity?.kind === "monster" && selectedEntity.monster?.id === m.id;
             return (
               <div
                 key={m.id}
@@ -342,29 +542,78 @@ export default function RunEncounterPage() {
             );
           })}
 
-          {/* Conditions for selected instance */}
-          {selectedInst && (
-            <div className="rounded-lg border p-4">
-              <p className="text-sm font-semibold mb-2">
-                Conditions — {selectedInst.label}
-              </p>
-              <div className="flex flex-wrap gap-1.5">
-                {CONDITIONS.map((c) => (
-                  <Button
-                    key={c}
-                    variant={selectedInst.conditions.includes(c) ? "default" : "outline"}
-                    size="sm"
-                    className="h-7 text-xs"
-                    onClick={() => toggleCondition(selectedInst.instanceId, c)}
-                  >
-                    {c}
-                  </Button>
-                ))}
-              </div>
-            </div>
+          {/* Conditions for selected entity */}
+          {selectedEntity && (
+            <ConditionsPanel
+              key={selectedEntity.instanceId}
+              instanceId={selectedEntity.instanceId}
+              label={selectedEntity.label}
+              kind={selectedEntity.kind}
+              activeConditions={selectedEntity.conditions}
+              onToggle={toggleCondition}
+            />
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+function ConditionsPanel({
+  instanceId,
+  label,
+  kind,
+  activeConditions,
+  onToggle,
+}: {
+  instanceId: string;
+  label: string;
+  kind: "monster" | "player";
+  activeConditions: string[];
+  onToggle: (instanceId: string, condition: string) => void;
+}) {
+  return (
+    <div className="rounded-lg border p-4 space-y-3">
+      <p className="text-sm font-semibold flex items-center gap-2">
+        Conditions —{" "}
+        <span className={kind === "player" ? "text-blue-400" : ""}>{label}</span>
+        {kind === "player" && <Badge variant="outline" className="text-[10px]">Player</Badge>}
+      </p>
+
+      {/* Toggle buttons */}
+      <div className="flex flex-wrap gap-1.5">
+        {CONDITIONS.map((c) => {
+          const isActive = activeConditions.includes(c);
+          return (
+            <Button
+              key={c}
+              variant={isActive ? "default" : "outline"}
+              size="sm"
+              className="h-7 text-xs"
+              onClick={() => onToggle(instanceId, c)}
+            >
+              {c}
+            </Button>
+          );
+        })}
+      </div>
+
+      {/* Active condition descriptions — only show what's toggled on */}
+      {activeConditions.length > 0 && (
+        <>
+          <Separator />
+          <div className="space-y-1.5">
+            {activeConditions.map((c) => (
+              <div key={c} className="rounded border border-primary/30 bg-primary/5 px-3 py-2">
+                <span className="text-xs font-semibold text-primary">{c}</span>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {CONDITION_DESCRIPTIONS[c]}
+                </p>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }

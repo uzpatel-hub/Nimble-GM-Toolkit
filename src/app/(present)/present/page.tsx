@@ -4,6 +4,7 @@ import { Suspense, useState, useRef, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { useImageStore } from "@/stores/image-store";
 import { useMapStore } from "@/stores/map-store";
+import { useImageData } from "@/hooks/use-image-data";
 import type { PinType, MapPin } from "@/types";
 
 const PIN_COLORS: Record<PinType, string> = {
@@ -25,7 +26,8 @@ function PresentContent() {
   const image = imageId ? images.find((i) => i.id === imageId) : null;
   const map = mapIdParam ? maps.find((m) => m.id === mapIdParam) : null;
 
-  const src = image?.dataUri ?? map?.imageDataUri;
+  const imageBlob = useImageData(imageId ? `img:${imageId}` : null, image?.dataUri || undefined);
+  const src = imageBlob ?? map?.imageDataUri ?? null;
   const alt = image?.name ?? map?.name ?? "Presented image";
 
   const visiblePins = showPins && map

@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useMounted } from "@/hooks/use-mounted";
+import { BackupRestoreInline } from "@/components/layout/BackupRestore";
 
 interface NavItem {
   label: string;
@@ -200,6 +201,8 @@ export function AppSidebar() {
             Signed in as <span className="font-medium text-foreground">{currentUser}</span>
           </div>
         )}
+        <BackupRestoreInline collapsed={collapsed} />
+        <Separator className="my-1" />
         <Link href="/settings">
           <Button
             variant={isActive("/settings") ? "secondary" : "ghost"}

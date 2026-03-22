@@ -4,13 +4,13 @@ import { useState, useMemo } from "react";
 import { useParams } from "next/navigation";
 import { Plus, Trash2, ImageIcon } from "lucide-react";
 import { useImageStore } from "@/stores/image-store";
-import type { ImageCategory } from "@/types";
+import { StoredImg } from "@/components/ui/stored-image";
+import type { ImageCategory, StoredImage } from "@/types";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardHeader, CardTitle, CardContent, CardAction } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Dialog,
@@ -28,11 +28,12 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 
-const CATEGORIES: ImageCategory[] = ["map", "npc-portrait", "scene", "handout"];
+const CATEGORIES: ImageCategory[] = ["map", "npc-portrait", "player-portrait", "scene", "handout"];
 
 const CATEGORY_LABELS: Record<ImageCategory, string> = {
   map: "Maps",
   "npc-portrait": "NPC Portraits",
+  "player-portrait": "Player Portraits",
   scene: "Scenes",
   handout: "Handouts",
 };
@@ -40,6 +41,7 @@ const CATEGORY_LABELS: Record<ImageCategory, string> = {
 const CATEGORY_COLORS: Record<ImageCategory, string> = {
   map: "bg-blue-500/10 text-blue-600",
   "npc-portrait": "bg-green-500/10 text-green-600",
+  "player-portrait": "bg-cyan-500/10 text-cyan-600",
   scene: "bg-purple-500/10 text-purple-600",
   handout: "bg-orange-500/10 text-orange-600",
 };
@@ -58,6 +60,7 @@ export default function ImagesPage() {
   const campaignImages = images.filter((img) => img.campaignId === campaignId);
 
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [viewImageId, setViewImageId] = useState<string | null>(null);
   const [newName, setNewName] = useState("");
   const [newCategory, setNewCategory] = useState<ImageCategory>("scene");
   const [newDataUri, setNewDataUri] = useState("");
@@ -105,41 +108,9 @@ export default function ImagesPage() {
       );
     }
     return (
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
         {imgs.map((img) => (
-          <Card key={img.id}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={img.dataUri}
-              alt={img.name}
-              className="h-40 w-full object-cover"
-            />
-            <CardHeader>
-              <CardTitle className="text-sm">{img.name}</CardTitle>
-              <CardAction>
-                <Button
-                  variant="destructive"
-                  size="icon-xs"
-                  onClick={() => deleteImage(img.id)}
-                >
-                  <Trash2 />
-                </Button>
-              </CardAction>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-2">
-                <Badge
-                  variant="secondary"
-                  className={CATEGORY_COLORS[img.category]}
-                >
-                  {CATEGORY_LABELS[img.category]}
-                </Badge>
-                <span className="text-xs text-muted-foreground">
-                  {formatBytes(img.sizeBytes)}
-                </span>
-              </div>
-            </CardContent>
-          </Card>
+          <ImageCard key={img.id} img={img} onDelete={deleteImage} onView={setViewImageId} />
         ))}
       </div>
     );
@@ -204,7 +175,7 @@ export default function ImagesPage() {
                       <img
                         src={newDataUri}
                         alt="Preview"
-                        className="mt-2 h-32 w-full rounded-md object-cover"
+                        className="mt-2 h-32 w-full rounded-md object-cover object-top"
                       />
                       <p className="text-xs text-muted-foreground">
                         {formatBytes(newSize)}
@@ -265,6 +236,49 @@ export default function ImagesPage() {
           </TabsContent>
         ))}
       </Tabs>
+
+      {/* Lightbox */}
+      {viewImageId && (
+        <div
+          className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center cursor-pointer"
+          onClick={() => setViewImageId(null)}
+        >
+          <StoredImg
+            imageId={viewImageId}
+            alt="Full view"
+            className="max-w-[90vw] max-h-[90vh] object-contain"
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ImageCard({ img, onDelete, onView }: { img: StoredImage; onDelete: (id: string) => void; onView: (id: string) => void }) {
+  return (
+    <div className="group rounded-md border overflow-hidden bg-card">
+      <div className="cursor-pointer relative" onDoubleClick={() => onView(img.id)}>
+        <StoredImg imageId={img.id} alt={img.name} className="h-24 w-full object-cover object-top" />
+        <Button
+          variant="destructive"
+          size="icon-xs"
+          className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity"
+          onClick={(e) => { e.stopPropagation(); onDelete(img.id); }}
+        >
+          <Trash2 />
+        </Button>
+      </div>
+      <div className="px-2 py-1.5">
+        <p className="text-xs font-medium truncate" title={img.name}>{img.name}</p>
+        <div className="flex items-center justify-between mt-0.5">
+          <span className={`text-[10px] ${CATEGORY_COLORS[img.category]}`}>
+            {CATEGORY_LABELS[img.category]}
+          </span>
+          <span className="text-[10px] text-muted-foreground">
+            {formatBytes(img.sizeBytes)}
+          </span>
+        </div>
+      </div>
     </div>
   );
 }

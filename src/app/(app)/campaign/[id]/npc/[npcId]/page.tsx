@@ -2,9 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Trash2, Plus, X } from "lucide-react";
+import { ArrowLeft, Trash2, Plus, X, Share2 } from "lucide-react";
 import { useNpcStore } from "@/stores/npc-store";
 import { useCampaignStore } from "@/stores/campaign-store";
+import { ShareExportDialog } from "@/components/share/ShareExportImport";
+import { ImageSelect } from "@/components/ui/image-select";
+import { StoredImg } from "@/components/ui/stored-image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,6 +33,7 @@ export default function NpcDetailPage() {
   const [notes, setNotes] = useState("");
   const [linkedLocations, setLinkedLocations] = useState<string[]>([]);
   const [linkedSessionIds, setLinkedSessionIds] = useState<string[]>([]);
+  const [imageId, setImageId] = useState("");
   const [newLocation, setNewLocation] = useState("");
   const [dirty, setDirty] = useState(false);
 
@@ -41,6 +45,7 @@ export default function NpcDetailPage() {
       setDescription(npc.description);
       setPersonality(npc.personality);
       setNotes(npc.notes);
+      setImageId(npc.imageId ?? "");
       setLinkedLocations(npc.linkedLocationNames);
       setLinkedSessionIds(npc.linkedSessionIds);
       setDirty(false);
@@ -58,6 +63,7 @@ export default function NpcDetailPage() {
       description,
       personality,
       notes,
+      imageId: imageId || undefined,
       linkedLocationNames: linkedLocations,
       linkedSessionIds,
     });
@@ -118,14 +124,44 @@ export default function NpcDetailPage() {
           <ArrowLeft data-icon="inline-start" />
           Back to NPCs
         </Button>
-        <Button variant="destructive" size="sm" onClick={handleDelete}>
-          <Trash2 data-icon="inline-start" />
-          Delete
-        </Button>
+        <div className="flex gap-2">
+          <ShareExportDialog
+            campaignId={campaignId}
+            preSelectedNpcIds={[npcId]}
+            trigger={
+              <Button variant="outline" size="sm">
+                <Share2 data-icon="inline-start" />
+                Share
+              </Button>
+            }
+          />
+          <Button variant="destructive" size="sm" onClick={handleDelete}>
+            <Trash2 data-icon="inline-start" />
+            Delete
+          </Button>
+        </div>
       </div>
+
+      {/* Portrait */}
+      {imageId && (
+        <div className="rounded-lg border overflow-hidden">
+          <StoredImg imageId={imageId} alt={name} className="w-full max-h-64 object-cover object-top" />
+        </div>
+      )}
 
       <Card>
         <CardContent className="space-y-5 pt-2">
+          <div className="space-y-2">
+            <Label>Portrait</Label>
+            <ImageSelect
+              campaignId={campaignId}
+              value={imageId}
+              onChange={(v) => { setImageId(v); markDirty(); }}
+              uploadCategory="npc-portrait"
+              showPreview={false}
+            />
+          </div>
+
           <div className="space-y-2">
             <Label>Name</Label>
             <Input
