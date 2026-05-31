@@ -60,6 +60,9 @@ export interface PartyMember {
   class: string;
   race: string;
   imageId?: string;
+  motivation?: string;
+  personality?: string;
+  backstory?: string;
 }
 
 // --- AI Chat ---
@@ -264,6 +267,28 @@ export interface StoredImage {
   dataUri: string;
   sizeBytes: number;
   createdAt: string;
+}
+
+// --- Combat State (persisted running encounter) ---
+
+export interface TrackedEntity {
+  instanceId: string;
+  label: string;
+  kind: 'monster' | 'player';
+  monsterId?: string;
+  currentHp: number;
+  maxHp: number;
+  isMinion: boolean;
+  conditions: string[];
+  turnTaken: boolean;
+}
+
+export interface CombatState {
+  encounterId: string;
+  monsters: TrackedEntity[];
+  players: TrackedEntity[];
+  round: number;
+  savedAt: string;
 }
 
 // --- Rules Reference ---

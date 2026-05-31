@@ -83,7 +83,14 @@ export function buildContextualSystemPrompt(data: ContextData): string {
       lines.push('Party Members:');
       for (const m of c.partyMembers) {
         const details = [m.race, m.class].filter(Boolean).join(' ');
-        lines.push(`- ${m.characterName} (${details || 'no class/race'}) — played by ${m.playerName}`);
+        let line = `- ${m.characterName} (${details || 'no class/race'}) — played by ${m.playerName}`;
+        const extras = [
+          m.motivation && `Motivation: ${m.motivation}`,
+          m.personality && `Personality: ${m.personality}`,
+          m.backstory && `Backstory: ${m.backstory}`,
+        ].filter(Boolean);
+        if (extras.length) line += `\n  ${extras.join(' | ')}`;
+        lines.push(line);
       }
     }
     prompt += `\n\n## Current Campaign\n${lines.join('\n')}`;

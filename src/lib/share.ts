@@ -4,7 +4,7 @@
  * into their own campaign — images included.
  */
 
-import type { PartyMember, NPC, StoredImage } from '@/types';
+import type { PartyMember, NPC, StoredImage, GameMap } from '@/types';
 import { getImageBlob, putImageBlob } from './image-db';
 import { cacheImageData } from '@/hooks/use-image-data';
 
@@ -12,19 +12,22 @@ import { cacheImageData } from '@/hooks/use-image-data';
 
 export interface SharePayload {
   type: 'nimble-gm-share';
-  version: 1;
+  version: 1 | 2;
   exportedAt: string;
   campaignName: string;
   partyMembers: PartyMember[];
   npcs: NPC[];
   images: Omit<StoredImage, 'campaignId'>[];
   imageBlobs: Record<string, string>;
+  /** v2: maps with pins */
+  maps?: Omit<GameMap, 'campaignId'>[];
 }
 
 export interface ShareImportResult {
   partyMembersCount: number;
   npcsCount: number;
   imagesCount: number;
+  mapsCount: number;
 }
 
 // ---- Export ----
@@ -34,19 +37,29 @@ export async function buildSharePayload({
   partyMembers,
   npcs,
   images,
+  maps,
 }: {
   campaignName: string;
   partyMembers: PartyMember[];
   npcs: NPC[];
   images: StoredImage[];
+  maps?: GameMap[];
 }): Promise<SharePayload> {
-  // Collect image IDs referenced by the NPCs
-  const npcImageIds = new Set(
-    npcs.map((n) => n.imageId).filter((id): id is string => !!id)
-  );
+  // Collect image IDs referenced by NPCs and maps
+  const referencedImageIds = new Set<string>();
+  for (const n of npcs) {
+    if (n.imageId) referencedImageIds.add(n.imageId);
+  }
+  for (const m of (maps ?? [])) {
+    if (m.imageId) referencedImageIds.add(m.imageId);
+  }
+  // Also include party member images
+  for (const pm of partyMembers) {
+    if (pm.imageId) referencedImageIds.add(pm.imageId);
+  }
 
-  // Filter images to only those used by the exported NPCs
-  const relevantImages = images.filter((img) => npcImageIds.has(img.id));
+  // Filter images to only those referenced
+  const relevantImages = images.filter((img) => referencedImageIds.has(img.id));
 
   // Fetch blobs from IndexedDB
   const imageBlobs: Record<string, string> = {};
@@ -55,18 +68,29 @@ export async function buildSharePayload({
     if (blob) imageBlobs[img.id] = blob;
   }
 
+  // Also fetch map inline image blobs (legacy imageDataUri maps)
+  for (const m of (maps ?? [])) {
+    if (m.imageId) {
+      // Already handled above
+    }
+  }
+
   // Strip campaignId from images (will be assigned on import)
   const portableImages = relevantImages.map(({ campaignId: _, ...rest }) => rest);
 
+  // Strip campaignId from maps
+  const portableMaps = (maps ?? []).map(({ campaignId: _, ...rest }) => rest);
+
   return {
     type: 'nimble-gm-share',
-    version: 1,
+    version: 2,
     exportedAt: new Date().toISOString(),
     campaignName,
     partyMembers,
     npcs,
     images: portableImages,
     imageBlobs,
+    maps: portableMaps.length > 0 ? portableMaps : undefined,
   };
 }
 
@@ -111,6 +135,7 @@ export async function importSharePayload(
   partyMembers: PartyMember[];
   npcs: NPC[];
   images: StoredImage[];
+  maps: GameMap[];
   result: ShareImportResult;
 }> {
   const now = new Date().toISOString();
@@ -139,10 +164,11 @@ export async function importSharePayload(
     }
   }
 
-  // Remap party members with new IDs
+  // Remap party members with new IDs, update imageId references
   const newMembers: PartyMember[] = payload.partyMembers.map((m) => ({
     ...m,
     id: crypto.randomUUID(),
+    imageId: m.imageId ? imageIdMap.get(m.imageId) ?? m.imageId : undefined,
   }));
 
   // Remap NPCs with new IDs, update imageId references
@@ -155,14 +181,27 @@ export async function importSharePayload(
     updatedAt: now,
   }));
 
+  // Remap maps with new IDs, update imageId references
+  const newMaps: GameMap[] = (payload.maps ?? []).map((m) => ({
+    ...m,
+    id: crypto.randomUUID(),
+    campaignId: targetCampaignId,
+    imageId: m.imageId ? imageIdMap.get(m.imageId) ?? m.imageId : undefined,
+    pins: m.pins.map((p) => ({ ...p, id: crypto.randomUUID() })),
+    createdAt: m.createdAt || now,
+    updatedAt: now,
+  }));
+
   return {
     partyMembers: newMembers,
     npcs: newNpcs,
     images: newImages,
+    maps: newMaps,
     result: {
       partyMembersCount: newMembers.length,
       npcsCount: newNpcs.length,
       imagesCount: newImages.length,
+      mapsCount: newMaps.length,
     },
   };
 }

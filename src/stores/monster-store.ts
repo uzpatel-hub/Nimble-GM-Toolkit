@@ -49,8 +49,18 @@ export const useMonsterStore = create<MonsterStore>()(
     }),
     {
       name: 'nimble-gm-monsters',
-      version: 1,
+      version: 2,
       storage: createUserStorage('nimble-gm-monsters'),
+      merge: (persistedState, currentState) => {
+        if (!persistedState || typeof persistedState !== 'object') return currentState;
+        const persisted = persistedState as Partial<MonsterStore>;
+        const customMonsters = (persisted.monsters ?? []).filter((m) => m.isCustom);
+        return {
+          ...currentState,
+          ...persisted,
+          monsters: [...BESTIARY_MONSTERS, ...customMonsters],
+        };
+      },
     }
   )
 );

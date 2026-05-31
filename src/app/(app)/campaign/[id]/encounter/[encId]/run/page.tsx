@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useMemo, useRef, useCallback } from "react";
+import { useState, useMemo, useRef, useCallback, useEffect } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Shield, Check, Swords, Heart } from "lucide-react";
+import { ArrowLeft, Shield, Check, Swords, Heart, Undo2 } from "lucide-react";
 import { useEncounterStore } from "@/stores/encounter-store";
 import { useMonsterStore } from "@/stores/monster-store";
 import { useCampaignStore } from "@/stores/campaign-store";
@@ -15,24 +15,16 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 
 import { CONDITIONS as RULES_CONDITIONS } from "@/data/rules";
-import type { Monster, MonsterAbility } from "@/types";
+import type { Monster, MonsterAbility, TrackedEntity as PersistedEntity } from "@/types";
 
 /** Map condition name → description for quick lookup */
 const CONDITION_DESCRIPTIONS: Record<string, string> = Object.fromEntries(
   RULES_CONDITIONS.map((c) => [c.name, c.description])
 );
 
-interface TrackedEntity {
-  instanceId: string;
-  label: string;
-  kind: "monster" | "player";
-  /** Only for monsters */
+/** Runtime entity — enriched with the full Monster object for display */
+interface RuntimeEntity extends PersistedEntity {
   monster?: Monster;
-  currentHp: number;
-  maxHp: number;
-  isMinion: boolean;
-  conditions: string[];
-  turnTaken: boolean;
 }
 
 const ARMOR_LABELS: Record<string, string> = { none: "None", medium: "Medium", heavy: "Heavy" };
@@ -44,6 +36,37 @@ const ARMOR_DESC: Record<string, string> = {
 
 const CONDITIONS = RULES_CONDITIONS.map((c) => c.name);
 
+const MAX_UNDO_HISTORY = 50;
+
+interface Snapshot {
+  monsters: RuntimeEntity[];
+  players: RuntimeEntity[];
+  round: number;
+}
+
+/** Strip the monster object for persistence */
+function toPersistedEntity(e: RuntimeEntity): PersistedEntity {
+  return {
+    instanceId: e.instanceId,
+    label: e.label,
+    kind: e.kind,
+    monsterId: e.monsterId,
+    currentHp: e.currentHp,
+    maxHp: e.maxHp,
+    isMinion: e.isMinion,
+    conditions: e.conditions,
+    turnTaken: e.turnTaken,
+  };
+}
+
+/** Re-attach monster objects from the monster store */
+function hydrateEntities(entities: PersistedEntity[], allMonsters: Monster[]): RuntimeEntity[] {
+  return entities.map((e) => ({
+    ...e,
+    monster: e.monsterId ? allMonsters.find((m) => m.id === e.monsterId) : undefined,
+  }));
+}
+
 export default function RunEncounterPage() {
   const params = useParams<{ id: string; encId: string }>();
   const router = useRouter();
@@ -53,7 +76,7 @@ export default function RunEncounterPage() {
   const querySessionId = searchParams.get("sid");
   const fromSession = searchParams.get("from") === "session";
 
-  const { encounters } = useEncounterStore();
+  const { encounters, combatStates, saveCombatState, clearCombatState } = useEncounterStore();
   const { monsters: allMonsters } = useMonsterStore();
   const { campaigns, sessions } = useCampaignStore();
 
@@ -67,9 +90,10 @@ export default function RunEncounterPage() {
   );
   const sessionId = querySessionId || linkedSession?.id;
 
-  const { initialMonsters, initialPlayers } = useMemo(() => {
-    const monsters: TrackedEntity[] = [];
-    const players: TrackedEntity[] = [];
+  // Build fresh initial state from encounter definition
+  const { freshMonsters, freshPlayers } = useMemo(() => {
+    const monsters: RuntimeEntity[] = [];
+    const players: RuntimeEntity[] = [];
 
     if (encounter) {
       for (const em of encounter.monsters) {
@@ -80,6 +104,7 @@ export default function RunEncounterPage() {
             instanceId: `${em.monsterId}-${i}`,
             label: em.count > 1 ? `${monster.name} ${i + 1}` : monster.name,
             kind: "monster",
+            monsterId: monster.id,
             monster,
             currentHp: em.isMinion ? 1 : monster.hp,
             maxHp: em.isMinion ? 1 : monster.hp,
@@ -106,16 +131,66 @@ export default function RunEncounterPage() {
       }
     }
 
-    return { initialMonsters: monsters, initialPlayers: players };
+    return { freshMonsters: monsters, freshPlayers: players };
   }, [encounter, allMonsters, campaign]);
 
-  const [monsters, setMonsters] = useState<TrackedEntity[]>(initialMonsters);
-  const [players, setPlayers] = useState<TrackedEntity[]>(initialPlayers);
-  const [damageInputs, setDamageInputs] = useState<Record<string, string>>({});
-  const [editingHpId, setEditingHpId] = useState<string | null>(null);
-  const [selectedId, setSelectedId] = useState<string | null>(initialMonsters[0]?.instanceId ?? null);
-  const [round, setRound] = useState(1);
-  const hpInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  // On first render, restore from saved combat state if available
+  const savedState = combatStates[encId];
+  const [didInit] = useState(() => {
+    // This only runs once — used to pick initial values
+    return !!savedState;
+  });
+
+  const [monsters, setMonsters] = useState<RuntimeEntity[]>(() =>
+    savedState ? hydrateEntities(savedState.monsters, allMonsters) : freshMonsters
+  );
+  const [players, setPlayers] = useState<RuntimeEntity[]>(() =>
+    savedState ? hydrateEntities(savedState.players, allMonsters) : freshPlayers
+  );
+  const [round, setRound] = useState(() => savedState?.round ?? 1);
+
+  const [damageInput, setDamageInput] = useState("");
+  const [selectedId, setSelectedId] = useState<string | null>(
+    () => (savedState ? hydrateEntities(savedState.monsters, allMonsters) : freshMonsters)[0]?.instanceId ?? null
+  );
+  const damageInputRef = useRef<HTMLInputElement | null>(null);
+
+  // --- Undo history ---
+  const undoStack = useRef<Snapshot[]>([]);
+
+  function pushUndo() {
+    undoStack.current.push({ monsters, players, round });
+    if (undoStack.current.length > MAX_UNDO_HISTORY) {
+      undoStack.current.shift();
+    }
+  }
+
+  function undo() {
+    const prev = undoStack.current.pop();
+    if (!prev) return;
+    setMonsters(prev.monsters);
+    setPlayers(prev.players);
+    setRound(prev.round);
+  }
+
+  const canUndo = undoStack.current.length > 0;
+
+  // --- Auto-save to store on state changes ---
+  const isFirstRender = useRef(true);
+  useEffect(() => {
+    // Skip the initial render to avoid saving the loaded state right back
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    saveCombatState({
+      encounterId: encId,
+      monsters: monsters.map(toPersistedEntity),
+      players: players.map(toPersistedEntity),
+      round,
+      savedAt: new Date().toISOString(),
+    });
+  }, [monsters, players, round, encId, saveCombatState]);
 
   // Selected entity from either list
   const selectedEntity = useMemo(
@@ -160,11 +235,15 @@ export default function RunEncounterPage() {
 
   function handleSelectEntity(instanceId: string) {
     setSelectedId(instanceId);
+    setDamageInput("");
     const inst = monsters.find((i) => i.instanceId === instanceId);
     if (inst?.monster) scrollToMonster(inst.monster.id);
+    // Focus the damage input after React re-renders with the new selection
+    setTimeout(() => damageInputRef.current?.focus(), 0);
   }
 
   function applyDamage(instanceId: string, amount: number) {
+    pushUndo();
     setMonsters((prev) =>
       prev.map((inst) => {
         if (inst.instanceId !== instanceId) return inst;
@@ -176,11 +255,13 @@ export default function RunEncounterPage() {
         return { ...inst, currentHp: newHp, conditions };
       })
     );
-    setDamageInputs((prev) => ({ ...prev, [instanceId]: "" }));
+    setDamageInput("");
+    damageInputRef.current?.focus();
   }
 
   function toggleCondition(instanceId: string, condition: string) {
-    const updater = (prev: TrackedEntity[]) =>
+    pushUndo();
+    const updater = (prev: RuntimeEntity[]) =>
       prev.map((inst) => {
         if (inst.instanceId !== instanceId) return inst;
         const conditions = inst.conditions.includes(condition)
@@ -198,7 +279,8 @@ export default function RunEncounterPage() {
   }
 
   function toggleTurn(instanceId: string) {
-    const updater = (prev: TrackedEntity[]) =>
+    pushUndo();
+    const updater = (prev: RuntimeEntity[]) =>
       prev.map((inst) =>
         inst.instanceId === instanceId ? { ...inst, turnTaken: !inst.turnTaken } : inst
       );
@@ -215,24 +297,30 @@ export default function RunEncounterPage() {
   }
 
   function nextRound() {
+    pushUndo();
     setRound((r) => r + 1);
     resetTurns();
   }
 
   function prevRound() {
+    pushUndo();
     setRound((r) => Math.max(1, r - 1));
     resetTurns();
   }
 
   function resetAll() {
-    setMonsters(initialMonsters);
-    setPlayers(initialPlayers);
-    setDamageInputs({});
+    pushUndo();
+    setMonsters(freshMonsters);
+    setPlayers(freshPlayers);
+    setDamageInput("");
     setRound(1);
-    setSelectedId(initialMonsters[0]?.instanceId ?? null);
+    setSelectedId(freshMonsters[0]?.instanceId ?? null);
+    clearCombatState(encId);
+    undoStack.current = [];
   }
 
   const aliveCount = monsters.filter((i) => i.currentHp > 0).length;
+  const hasChanges = savedState != null || didInit;
 
   return (
     <div className="flex flex-col h-[100dvh]">
@@ -249,6 +337,15 @@ export default function RunEncounterPage() {
           </span>
         </div>
         <div className="flex gap-1">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={undo}
+            disabled={!canUndo}
+            title="Undo last change"
+          >
+            <Undo2 className="size-4 mr-1" /> Undo
+          </Button>
           <ImagePicker campaignId={campaignId} />
           {encounter?.imageId && (
             <Button variant="outline" size="sm"
@@ -277,206 +374,194 @@ export default function RunEncounterPage() {
         {/* LEFT: Tracker */}
         <div className="w-1/2 border-r overflow-y-auto">
           {/* Players section */}
-          {players.length > 0 && (
-            <>
-              <div className="px-3 py-1 bg-blue-950/30 border-b">
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-blue-400 flex items-center gap-1">
-                  <Shield className="size-3" /> Party
-                </span>
-              </div>
-              <div className="divide-y">
-                {players.map((player) => {
-                  const isSelected = selectedId === player.instanceId;
-                  return (
-                    <div
-                      key={player.instanceId}
-                      className={`px-3 py-1.5 cursor-pointer transition-colors flex items-center gap-2 ${
-                        player.turnTaken ? "opacity-50" : ""
-                      } ${isSelected ? "bg-muted" : "hover:bg-muted/50"}`}
-                      onClick={() => handleSelectEntity(player.instanceId)}
-                    >
+            {players.length > 0 && (
+              <>
+                <div className="px-3 py-1 bg-blue-950/30 border-b">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-blue-400 flex items-center gap-1">
+                    <Shield className="size-3" /> Party
+                  </span>
+                </div>
+                <div className="divide-y">
+                  {players.map((player) => {
+                    const isSelected = selectedId === player.instanceId;
+                    return (
+                      <div
+                        key={player.instanceId}
+                        className={`px-3 py-1.5 cursor-pointer transition-colors flex items-center gap-2 ${
+                          player.turnTaken ? "opacity-50" : ""
+                        } ${isSelected ? "bg-muted" : "hover:bg-muted/50"}`}
+                        onClick={() => handleSelectEntity(player.instanceId)}
+                      >
+                        <button
+                          className={`size-5 shrink-0 rounded border flex items-center justify-center transition-colors ${
+                            player.turnTaken
+                              ? "bg-blue-600 border-blue-500 text-white"
+                              : "border-muted-foreground/40 hover:border-blue-400"
+                          }`}
+                          title={player.turnTaken ? "Mark turn not taken" : "Mark turn taken"}
+                          onClick={(e) => { e.stopPropagation(); toggleTurn(player.instanceId); }}
+                        >
+                          {player.turnTaken && <Check className="size-3" />}
+                        </button>
+                        <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                          <span className={`font-medium text-sm truncate text-blue-300 ${player.turnTaken ? "line-through" : ""}`}>
+                            {player.label}
+                          </span>
+                          {player.conditions.map((c) => (
+                            <button
+                              key={c}
+                              className="text-[10px] bg-red-900/50 text-red-300 rounded px-1 shrink-0 hover:bg-red-700/60 hover:line-through transition-colors"
+                              title={`${c} — click to remove`}
+                              onClick={(e) => { e.stopPropagation(); toggleCondition(player.instanceId, c); }}
+                            >
+                              {c}
+                            </button>
+                          ))}
+                        </div>
+                        {player.conditions.length === 0 && (
+                          <span className="text-[10px] text-muted-foreground">No conditions</span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+
+            {/* Monsters section */}
+            <div className="px-3 py-1 bg-red-950/30 border-b border-t">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-red-400">
+                Monsters
+              </span>
+            </div>
+            <div className="divide-y">
+              {monsters.map((inst) => {
+                const isDead = inst.currentHp <= 0;
+                const hpPct = inst.maxHp > 0 ? (inst.currentHp / inst.maxHp) * 100 : 0;
+                const isSelected = selectedId === inst.instanceId;
+
+                return (
+                  <div
+                    key={inst.instanceId}
+                    className={`cursor-pointer transition-colors ${
+                      isDead ? "opacity-40" : inst.turnTaken ? "opacity-50" : ""
+                    } ${isSelected ? "bg-muted" : "hover:bg-muted/50"}`}
+                    onClick={() => handleSelectEntity(inst.instanceId)}
+                  >
+                    {/* Main row */}
+                    <div className="px-3 py-1.5 flex items-center gap-2">
+                      {/* Turn taken checkbox */}
                       <button
                         className={`size-5 shrink-0 rounded border flex items-center justify-center transition-colors ${
-                          player.turnTaken
-                            ? "bg-blue-600 border-blue-500 text-white"
-                            : "border-muted-foreground/40 hover:border-blue-400"
+                          inst.turnTaken
+                            ? "bg-green-600 border-green-500 text-white"
+                            : "border-muted-foreground/40 hover:border-green-400"
                         }`}
-                        title={player.turnTaken ? "Mark turn not taken" : "Mark turn taken"}
-                        onClick={(e) => { e.stopPropagation(); toggleTurn(player.instanceId); }}
+                        title={inst.turnTaken ? "Mark turn not taken" : "Mark turn taken"}
+                        onClick={(e) => { e.stopPropagation(); toggleTurn(inst.instanceId); }}
                       >
-                        {player.turnTaken && <Check className="size-3" />}
+                        {inst.turnTaken && <Check className="size-3" />}
                       </button>
+
+                      {/* Name + conditions */}
                       <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                        <span className={`font-medium text-sm truncate text-blue-300 ${player.turnTaken ? "line-through" : ""}`}>
-                          {player.label}
+                        <span className={`font-medium text-sm truncate ${isDead ? "line-through" : inst.turnTaken ? "line-through text-muted-foreground" : ""}`}>
+                          {inst.label}
                         </span>
-                        {player.conditions.map((c) => (
+                        {inst.conditions.map((c) => (
                           <button
                             key={c}
                             className="text-[10px] bg-red-900/50 text-red-300 rounded px-1 shrink-0 hover:bg-red-700/60 hover:line-through transition-colors"
                             title={`${c} — click to remove`}
-                            onClick={(e) => { e.stopPropagation(); toggleCondition(player.instanceId, c); }}
+                            onClick={(e) => { e.stopPropagation(); toggleCondition(inst.instanceId, c); }}
                           >
                             {c}
                           </button>
                         ))}
                       </div>
-                      {player.conditions.length === 0 && (
-                        <span className="text-[10px] text-muted-foreground">No conditions</span>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </>
-          )}
 
-          {/* Monsters section */}
-          <div className="px-3 py-1 bg-red-950/30 border-b border-t">
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-red-400">
-              Monsters
-            </span>
-          </div>
-          <div className="divide-y">
-            {monsters.map((inst) => {
-              const isDead = inst.currentHp <= 0;
-              const hpPct = inst.maxHp > 0 ? (inst.currentHp / inst.maxHp) * 100 : 0;
-              const dmg = damageInputs[inst.instanceId] ?? "";
-              const isSelected = selectedId === inst.instanceId;
-
-              return (
-                <div
-                  key={inst.instanceId}
-                  className={`px-3 py-1.5 cursor-pointer transition-colors flex items-center gap-2 ${
-                    isDead ? "opacity-40" : inst.turnTaken ? "opacity-50" : ""
-                  } ${isSelected ? "bg-muted" : "hover:bg-muted/50"}`}
-                  onClick={() => handleSelectEntity(inst.instanceId)}
-                >
-                  {/* Turn taken checkbox */}
-                  <button
-                    className={`size-5 shrink-0 rounded border flex items-center justify-center transition-colors ${
-                      inst.turnTaken
-                        ? "bg-green-600 border-green-500 text-white"
-                        : "border-muted-foreground/40 hover:border-green-400"
-                    }`}
-                    title={inst.turnTaken ? "Mark turn not taken" : "Mark turn taken"}
-                    onClick={(e) => { e.stopPropagation(); toggleTurn(inst.instanceId); }}
-                  >
-                    {inst.turnTaken && <Check className="size-3" />}
-                  </button>
-
-                  {/* Name + conditions */}
-                  <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                    <span className={`font-medium text-sm truncate ${isDead ? "line-through" : inst.turnTaken ? "line-through text-muted-foreground" : ""}`}>
-                      {inst.label}
-                    </span>
-                    {inst.conditions.map((c) => (
-                      <button
-                        key={c}
-                        className="text-[10px] bg-red-900/50 text-red-300 rounded px-1 shrink-0 hover:bg-red-700/60 hover:line-through transition-colors"
-                        title={`${c} — click to remove`}
-                        onClick={(e) => { e.stopPropagation(); toggleCondition(inst.instanceId, c); }}
-                      >
-                        {c}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* HP display / controls */}
-                  <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
-                    {inst.isMinion ? (
-                      isDead ? (
-                        <span className="text-xs text-red-500 font-mono w-10 text-center">Dead</span>
-                      ) : (
-                        <Button variant="destructive" size="sm" className="h-6 text-xs px-2"
-                          onClick={() => applyDamage(inst.instanceId, 1)}>Kill</Button>
-                      )
-                    ) : editingHpId === inst.instanceId ? (
-                      /* Expanded edit mode */
-                      <div className="flex items-center gap-1">
-                        <Button
-                          variant="default"
-                          size="sm"
-                          className="h-7 px-2 text-xs bg-red-600 hover:bg-red-500"
-                          disabled={!dmg}
-                          onClick={() => {
-                            if (dmg) applyDamage(inst.instanceId, Math.abs(Number(dmg)));
-                            setEditingHpId(null);
-                          }}
-                        >
-                          <Swords className="size-3 mr-1" /> Dmg
-                        </Button>
-                        <Input
-                          ref={(el) => { hpInputRefs.current[inst.instanceId] = el; }}
-                          type="number"
-                          value={dmg}
-                          onChange={(e) => setDamageInputs((p) => ({ ...p, [inst.instanceId]: e.target.value }))}
-                          placeholder="Amount"
-                          className="w-20 h-7 text-sm text-center"
-                          autoFocus
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter" && dmg) {
-                              applyDamage(inst.instanceId, Number(dmg));
-                              setEditingHpId(null);
-                            }
-                            if (e.key === "Escape") setEditingHpId(null);
-                          }}
-                          onBlur={() => {
-                            // Small delay so button clicks register first
-                            setTimeout(() => setEditingHpId((cur) => cur === inst.instanceId ? null : cur), 150);
-                          }}
-                        />
-                        <Button
-                          variant="default"
-                          size="sm"
-                          className="h-7 px-2 text-xs bg-green-600 hover:bg-green-500"
-                          disabled={!dmg}
-                          onClick={() => {
-                            if (dmg) applyDamage(inst.instanceId, -Math.abs(Number(dmg)));
-                            setEditingHpId(null);
-                          }}
-                        >
-                          <Heart className="size-3 mr-1" /> Heal
-                        </Button>
+                      {/* HP + inline damage controls */}
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {inst.isMinion ? (
+                          isDead ? (
+                            <span className="text-xs text-red-500 font-mono w-10 text-center">Dead</span>
+                          ) : (
+                            <Button variant="destructive" size="sm" className="h-6 text-xs px-2"
+                              onClick={(e) => { e.stopPropagation(); applyDamage(inst.instanceId, 1); }}>Kill</Button>
+                          )
+                        ) : (
+                          <div className="flex items-center gap-1.5">
+                            <div className="w-16 h-2 rounded-full bg-muted overflow-hidden">
+                              <div
+                                className={`h-full rounded-full transition-all ${
+                                  isDead ? "bg-red-700" : hpPct <= 25 ? "bg-red-500" : hpPct <= 50 ? "bg-yellow-500" : "bg-green-500"
+                                }`}
+                                style={{ width: `${hpPct}%` }}
+                              />
+                            </div>
+                            <span className={`text-sm font-mono ${
+                              isDead ? "text-red-500" : hpPct <= 50 ? "text-yellow-500" : "text-muted-foreground"
+                            }`}>
+                              {inst.currentHp}/{inst.maxHp}
+                            </span>
+                            {isSelected && (
+                              <>
+                                <Button
+                                  size="sm"
+                                  className="h-7 w-7 p-0 bg-red-600 hover:bg-red-500 text-white"
+                                  disabled={!damageInput}
+                                  title="Apply damage"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (damageInput) applyDamage(inst.instanceId, Math.abs(Number(damageInput)));
+                                  }}
+                                >
+                                  <Swords className="size-3.5" />
+                                </Button>
+                                <Input
+                                  ref={damageInputRef}
+                                  type="number"
+                                  value={damageInput}
+                                  onChange={(e) => setDamageInput(e.target.value)}
+                                  placeholder="0"
+                                  className="h-7 w-16 text-sm text-center font-mono px-1"
+                                  onClick={(e) => e.stopPropagation()}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "Enter" && damageInput) {
+                                      applyDamage(inst.instanceId, Math.abs(Number(damageInput)));
+                                    }
+                                  }}
+                                />
+                                <Button
+                                  size="sm"
+                                  className="h-7 w-7 p-0 bg-green-600 hover:bg-green-500 text-white"
+                                  disabled={!damageInput}
+                                  title="Heal"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (damageInput) applyDamage(inst.instanceId, -Math.abs(Number(damageInput)));
+                                  }}
+                                >
+                                  <Heart className="size-3.5" />
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                        )}
                       </div>
-                    ) : (
-                      /* Compact display mode — click to edit */
-                      <button
-                        className="flex items-center gap-1.5 rounded px-1.5 py-0.5 -my-0.5 hover:bg-muted/80 transition-colors"
-                        title="Click to adjust HP"
-                        onClick={() => {
-                          setEditingHpId(inst.instanceId);
-                          setDamageInputs((p) => ({ ...p, [inst.instanceId]: "" }));
-                        }}
-                      >
-                        <div className="w-20 h-2 rounded-full bg-muted overflow-hidden">
-                          <div
-                            className={`h-full rounded-full transition-all ${
-                              isDead ? "bg-red-700" : hpPct <= 25 ? "bg-red-500" : hpPct <= 50 ? "bg-yellow-500" : "bg-green-500"
-                            }`}
-                            style={{ width: `${hpPct}%` }}
-                          />
-                        </div>
-                        <span className={`text-sm font-mono ${
-                          isDead ? "text-red-500" : hpPct <= 50 ? "text-yellow-500" : "text-muted-foreground"
-                        }`}>
-                          {inst.currentHp}/{inst.maxHp}
-                        </span>
-                      </button>
-                    )}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Encounter notes at bottom */}
-          {encounter.notes && (
-            <div className="p-3 border-t">
-              <p className="text-xs font-semibold text-muted-foreground mb-1">Notes</p>
-              <p className="text-xs whitespace-pre-wrap">{encounter.notes}</p>
+                );
+              })}
             </div>
-          )}
+
+            {/* Encounter notes at bottom */}
+            {encounter.notes && (
+              <div className="p-3 border-t">
+                <p className="text-xs font-semibold text-muted-foreground mb-1">Notes</p>
+                <p className="text-xs whitespace-pre-wrap">{encounter.notes}</p>
+              </div>
+            )}
         </div>
 
         {/* RIGHT: All monster stat blocks + conditions */}

@@ -11,6 +11,7 @@ import { ChatPanel } from "@/components/chat/ChatPanel";
 import { ImagePicker } from "@/components/layout/ImagePicker";
 import { openPresentWindow } from "@/lib/present-window";
 import type { EncounterMonster, DifficultyRating } from "@/types";
+import { calcDifficulty, MINION_PRESSURE_LABEL } from "@/lib/difficulty";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,27 +19,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-
-function calcDifficulty(
-  monsters: EncounterMonster[],
-  partySize: number,
-  partyLevel: number
-): { rating: DifficultyRating; percent: number } {
-  const budget = partySize * partyLevel;
-  if (budget === 0) return { rating: "easy", percent: 0 };
-  const threat = monsters.reduce((sum, m) => {
-    const effectiveLevel = m.isMinion ? m.level * 0.5 : m.level;
-    return sum + effectiveLevel * m.count;
-  }, 0);
-  const percent = Math.round((threat / budget) * 100);
-  let rating: DifficultyRating;
-  if (percent < 50) rating = "easy";
-  else if (percent < 88) rating = "medium";
-  else if (percent <= 112) rating = "hard";
-  else if (percent <= 137) rating = "deadly";
-  else rating = "very-deadly";
-  return { rating, percent };
-}
 
 const DIFFICULTY_COLORS: Record<DifficultyRating, string> = {
   easy: "bg-green-500",
@@ -117,21 +97,18 @@ export default function EncounterDetailPage() {
     return filtered.sort((a, b) => a.level - b.level || a.name.localeCompare(b.name));
   }, [monsters, monsterSearch, levelFilter, levelThreshold]);
 
-  const { rating, percent } = useMemo(
+  const { rating, percent, minionCount, minionsPerHero, minionPressure } = useMemo(
     () => calcDifficulty(encounterMonsters, partySize, partyLevel),
     [encounterMonsters, partySize, partyLevel]
   );
 
-  const { standardCount, minionCount, ratio } = useMemo(() => {
-    let std = 0;
-    let min = 0;
-    for (const m of encounterMonsters) {
-      if (m.isMinion) min += m.count;
-      else std += m.count;
-    }
+  const { standardCount, ratio } = useMemo(() => {
+    const std = encounterMonsters.reduce(
+      (sum, m) => sum + (m.isMinion ? 0 : m.count),
+      0
+    );
     return {
       standardCount: std,
-      minionCount: min,
       ratio: partySize > 0 ? std / partySize : 0,
     };
   }, [encounterMonsters, partySize]);
@@ -346,6 +323,9 @@ export default function EncounterDetailPage() {
               <span>Deadly</span>
               <span>Very Deadly</span>
             </div>
+            <p className="text-[11px] text-muted-foreground">
+              Based on standard monster levels vs. party levels. Minions are rated separately.
+            </p>
 
             {/* Monster-to-Hero Ratio */}
             {encounterMonsters.length > 0 && (
@@ -375,6 +355,34 @@ export default function EncounterDetailPage() {
                 </div>
                 <p className="text-[11px] text-muted-foreground">
                   Sweet spot: 1-4 standard monsters per hero
+                </p>
+              </div>
+            )}
+
+            {/* Minion pressure */}
+            {minionCount > 0 && (
+              <div className="pt-2 border-t space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">Minion Pressure</span>
+                  <Badge
+                    variant="secondary"
+                    className={
+                      minionPressure === "slight"
+                        ? "text-yellow-600"
+                        : minionPressure === "noticeable"
+                          ? "text-orange-600"
+                          : "text-red-600"
+                    }
+                  >
+                    {MINION_PRESSURE_LABEL[minionPressure]}
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>{minionCount} minion{minionCount === 1 ? "" : "s"} / {partySize} hero{partySize === 1 ? "" : "es"}</span>
+                  <span>{minionsPerHero.toFixed(1)} per hero</span>
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  1/hero = slightly harder, 2–3/hero = noticeably harder, 4+/hero = much harder.
                 </p>
               </div>
             )}

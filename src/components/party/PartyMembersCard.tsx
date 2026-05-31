@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -35,9 +36,9 @@ const ANCESTRIES = {
 };
 
 const CLASSES = [
-  'Berserker', 'The Cheat', 'Commander', 'Hunter', 'Mage',
-  'Oathsworn', 'Shadowmancer', 'Shepherd', 'Songweaver',
-  'Stormshifter', 'Zephyr',
+  'Artificer', 'Berserker', 'The Cheat', 'Commander', 'Hexbinder',
+  'Hunter', 'Mage', 'Oathsworn', 'Shadowmancer', 'Shepherd',
+  'Songweaver', 'Stormshifter', 'Zephyr',
 ];
 
 interface PartyMembersCardProps {
@@ -55,11 +56,15 @@ export function PartyMembersCard({
 }: PartyMembersCardProps) {
   const [adding, setAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [characterName, setCharacterName] = useState('');
   const [playerName, setPlayerName] = useState('');
   const [charClass, setCharClass] = useState('');
   const [race, setRace] = useState('');
   const [imageId, setImageId] = useState('');
+  const [motivation, setMotivation] = useState('');
+  const [personality, setPersonality] = useState('');
+  const [backstory, setBackstory] = useState('');
 
   function resetForm() {
     setCharacterName('');
@@ -67,6 +72,9 @@ export function PartyMembersCard({
     setCharClass('');
     setRace('');
     setImageId('');
+    setMotivation('');
+    setPersonality('');
+    setBackstory('');
     setAdding(false);
     setEditingId(null);
   }
@@ -80,6 +88,9 @@ export function PartyMembersCard({
       class: charClass.trim(),
       race: race.trim(),
       imageId: imageId || undefined,
+      motivation: motivation.trim() || undefined,
+      personality: personality.trim() || undefined,
+      backstory: backstory.trim() || undefined,
     };
     onChange?.([...members, member]);
     resetForm();
@@ -92,6 +103,9 @@ export function PartyMembersCard({
     setCharClass(member.class);
     setRace(member.race);
     setImageId(member.imageId ?? '');
+    setMotivation(member.motivation ?? '');
+    setPersonality(member.personality ?? '');
+    setBackstory(member.backstory ?? '');
   }
 
   function handleSaveEdit() {
@@ -106,6 +120,9 @@ export function PartyMembersCard({
               class: charClass.trim(),
               race: race.trim(),
               imageId: imageId || undefined,
+              motivation: motivation.trim() || undefined,
+              personality: personality.trim() || undefined,
+              backstory: backstory.trim() || undefined,
             }
           : m
       )
@@ -144,11 +161,17 @@ export function PartyMembersCard({
               race={race}
               imageId={imageId}
               campaignId={campaignId}
+              motivation={motivation}
+              personality={personality}
+              backstory={backstory}
               onCharacterNameChange={setCharacterName}
               onPlayerNameChange={setPlayerName}
               onClassChange={setCharClass}
               onRaceChange={setRace}
               onImageIdChange={setImageId}
+              onMotivationChange={setMotivation}
+              onPersonalityChange={setPersonality}
+              onBackstoryChange={setBackstory}
               onSave={handleSaveEdit}
               onCancel={resetForm}
               saveLabel="Save"
@@ -156,37 +179,78 @@ export function PartyMembersCard({
           ) : (
             <div
               key={member.id}
-              className="flex items-center gap-3 rounded-md border p-3 group"
+              className="rounded-md border p-3 group"
             >
-              {member.imageId && (
-                <StoredImg imageId={member.imageId} alt={member.characterName || member.playerName} className="size-10 rounded-full object-cover object-top shrink-0" />
-              )}
-              <div className="flex-1 min-w-0">
-                <div className="font-medium">
-                  {member.characterName || <span className="text-muted-foreground italic">No character name</span>}
-                </div>
-                <div className="text-sm text-muted-foreground">
-                  {[member.race, member.class].filter(Boolean).join(' ')}
-                  {(member.race || member.class) && ' \u2022 '}
-                  Played by {member.playerName}
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  className="flex items-center gap-3 flex-1 min-w-0 text-left cursor-pointer"
+                  onClick={() => {
+                    if (member.motivation || member.personality || member.backstory) {
+                      setExpandedIds((prev) => {
+                        const next = new Set(prev);
+                        if (next.has(member.id)) next.delete(member.id);
+                        else next.add(member.id);
+                        return next;
+                      });
+                    }
+                  }}
+                >
+                  {member.imageId && (
+                    <StoredImg imageId={member.imageId} alt={member.characterName || member.playerName} className="size-10 rounded-full object-cover object-top shrink-0" />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium">
+                      {member.characterName || <span className="text-muted-foreground italic">No character name</span>}
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      {[member.race, member.class].filter(Boolean).join(' ')}
+                      {(member.race || member.class) && ' \u2022 '}
+                      Played by {member.playerName}
+                    </div>
+                  </div>
+                </button>
+                <div className="flex gap-1 shrink-0">
+                  {editable && (
+                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEdit(member)}
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDelete(member.id)}
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </div>
-              {editable && (
-                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleEdit(member)}
-                  >
-                    Edit
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleDelete(member.id)}
-                  >
-                    Remove
-                  </Button>
+              {expandedIds.has(member.id) && (
+                <div className="mt-3 space-y-2 border-t pt-3 text-sm">
+                  {member.motivation && (
+                    <div>
+                      <span className="font-medium text-muted-foreground">Motivation: </span>
+                      <span>{member.motivation}</span>
+                    </div>
+                  )}
+                  {member.personality && (
+                    <div>
+                      <span className="font-medium text-muted-foreground">Personality: </span>
+                      <span>{member.personality}</span>
+                    </div>
+                  )}
+                  {member.backstory && (
+                    <div>
+                      <span className="font-medium text-muted-foreground">Backstory: </span>
+                      <span>{member.backstory}</span>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -203,11 +267,17 @@ export function PartyMembersCard({
               race={race}
               imageId={imageId}
               campaignId={campaignId}
+              motivation={motivation}
+              personality={personality}
+              backstory={backstory}
               onCharacterNameChange={setCharacterName}
               onPlayerNameChange={setPlayerName}
               onClassChange={setCharClass}
               onRaceChange={setRace}
               onImageIdChange={setImageId}
+              onMotivationChange={setMotivation}
+              onPersonalityChange={setPersonality}
+              onBackstoryChange={setBackstory}
               onSave={handleAdd}
               onCancel={resetForm}
               saveLabel="Add"
@@ -226,11 +296,17 @@ function MemberForm({
   race,
   imageId,
   campaignId,
+  motivation,
+  personality,
+  backstory,
   onCharacterNameChange,
   onPlayerNameChange,
   onClassChange,
   onRaceChange,
   onImageIdChange,
+  onMotivationChange,
+  onPersonalityChange,
+  onBackstoryChange,
   onSave,
   onCancel,
   saveLabel,
@@ -241,11 +317,17 @@ function MemberForm({
   race: string;
   imageId: string;
   campaignId?: string;
+  motivation: string;
+  personality: string;
+  backstory: string;
   onCharacterNameChange: (v: string) => void;
   onPlayerNameChange: (v: string) => void;
   onClassChange: (v: string) => void;
   onRaceChange: (v: string) => void;
   onImageIdChange: (v: string) => void;
+  onMotivationChange: (v: string) => void;
+  onPersonalityChange: (v: string) => void;
+  onBackstoryChange: (v: string) => void;
   onSave: () => void;
   onCancel: () => void;
   saveLabel: string;
@@ -317,6 +399,36 @@ function MemberForm({
           />
         </div>
       )}
+      <Separator />
+      <div className="space-y-3">
+        <div className="space-y-1">
+          <Label className="text-xs">Motivation</Label>
+          <Textarea
+            value={motivation}
+            onChange={(e) => onMotivationChange(e.target.value)}
+            placeholder="What drives this character? Goals, desires, fears..."
+            rows={2}
+          />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs">Personality</Label>
+          <Textarea
+            value={personality}
+            onChange={(e) => onPersonalityChange(e.target.value)}
+            placeholder="Traits, quirks, temperament..."
+            rows={2}
+          />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs">Backstory</Label>
+          <Textarea
+            value={backstory}
+            onChange={(e) => onBackstoryChange(e.target.value)}
+            placeholder="Past events, origins, key relationships..."
+            rows={3}
+          />
+        </div>
+      </div>
       <div className="flex gap-2 justify-end">
         <Button variant="outline" size="sm" onClick={onCancel}>
           Cancel
