@@ -13,6 +13,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 import { CONDITIONS as RULES_CONDITIONS } from "@/data/rules";
 import type { Monster, MonsterAbility, TrackedEntity as PersistedEntity } from "@/types";
@@ -153,6 +161,7 @@ export default function RunEncounterPage() {
   const [selectedId, setSelectedId] = useState<string | null>(
     () => (savedState ? hydrateEntities(savedState.monsters, allMonsters) : freshMonsters)[0]?.instanceId ?? null
   );
+  const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
   const damageInputRef = useRef<HTMLInputElement | null>(null);
 
   // --- Undo history ---
@@ -365,7 +374,7 @@ export default function RunEncounterPage() {
           <Button variant="outline" size="sm" onClick={nextRound}>
             + Round
           </Button>
-          <Button variant="destructive" size="sm" onClick={resetAll}>Reset</Button>
+          <Button variant="destructive" size="sm" onClick={() => setResetConfirmOpen(true)}>Reset</Button>
         </div>
       </div>
 
@@ -640,6 +649,31 @@ export default function RunEncounterPage() {
           )}
         </div>
       </div>
+
+      <Dialog open={resetConfirmOpen} onOpenChange={setResetConfirmOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reset encounter?</DialogTitle>
+            <DialogDescription>
+              This will clear all tracking — HP, conditions, turns taken, round counter, and undo history will be lost. Monsters and players will return to their starting state. This cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setResetConfirmOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                resetAll();
+                setResetConfirmOpen(false);
+              }}
+            >
+              Reset encounter
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
