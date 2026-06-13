@@ -263,6 +263,7 @@ export interface StoredImage {
   id: string;
   campaignId: string;
   name: string;
+  description?: string;
   category: ImageCategory;
   dataUri: string;
   sizeBytes: number;

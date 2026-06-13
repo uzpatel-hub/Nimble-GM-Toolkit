@@ -3,7 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import { Pencil } from 'lucide-react';
 import { PageHeader } from '@/components/layout/PageHeader';
+import { SessionRenameDialog } from '@/components/session/SessionRenameDialog';
 import { useCampaignStore } from '@/stores/campaign-store';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -38,6 +40,11 @@ export default function SessionsPage() {
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [title, setTitle] = useState('');
+
+  // Rename state — which session is being renamed (null = closed)
+  const [editId, setEditId] = useState<string | null>(null);
+  const editSession = editId ? campaignSessions.find((s) => s.id === editId) ?? null : null;
+
   const [sessionNumber, setSessionNumber] = useState(
     campaignSessions.length > 0
       ? Math.max(...campaignSessions.map((s) => s.number)) + 1
@@ -149,37 +156,52 @@ export default function SessionsPage() {
       ) : (
         <div className="space-y-2">
           {campaignSessions.map((session) => (
-            <Link
+            <div
               key={session.id}
-              href={`/campaign/${campaignId}/session/${session.id}`}
-              className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors"
+              className="group flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors"
             >
-              <div className="flex items-center gap-4">
+              <Link
+                href={`/campaign/${campaignId}/session/${session.id}`}
+                className="flex items-center gap-4 flex-1 min-w-0"
+              >
                 <span className="text-lg font-bold text-muted-foreground w-10 text-right">
                   #{session.number}
                 </span>
-                <div>
-                  <p className="font-medium">{session.title}</p>
+                <div className="min-w-0">
+                  <p className="font-medium truncate">{session.title}</p>
                   <p className="text-xs text-muted-foreground">
                     {new Date(session.createdAt).toLocaleDateString()}
                   </p>
                 </div>
+              </Link>
+              <div className="flex items-center gap-2 shrink-0 pl-3">
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  className="opacity-0 group-hover:opacity-100 transition-opacity"
+                  title="Rename session"
+                  onClick={() => setEditId(session.id)}
+                >
+                  <Pencil />
+                </Button>
+                <Badge
+                  variant={
+                    session.status === 'completed'
+                      ? 'default'
+                      : session.status === 'in-progress'
+                      ? 'secondary'
+                      : 'outline'
+                  }
+                >
+                  {session.status}
+                </Badge>
               </div>
-              <Badge
-                variant={
-                  session.status === 'completed'
-                    ? 'default'
-                    : session.status === 'in-progress'
-                    ? 'secondary'
-                    : 'outline'
-                }
-              >
-                {session.status}
-              </Badge>
-            </Link>
+            </div>
           ))}
         </div>
       )}
+
+      <SessionRenameDialog session={editSession} onClose={() => setEditId(null)} />
     </div>
   );
 }

@@ -1,14 +1,16 @@
 "use client";
 
-import { useState, useMemo, useRef, useCallback } from "react";
+import { useState, useMemo, useRef, useCallback, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { Plus, Trash2, ImageIcon, FolderOpen, Tag } from "lucide-react";
+import { Plus, Trash2, ImageIcon, FolderOpen, MonitorPlay, Pencil } from "lucide-react";
 import { useImageStore } from "@/stores/image-store";
+import { openPresentWindow } from "@/lib/present-window";
 import { StoredImg } from "@/components/ui/stored-image";
 import type { ImageCategory, StoredImage } from "@/types";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -62,7 +64,9 @@ export default function ImagesPage() {
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [viewImageId, setViewImageId] = useState<string | null>(null);
+  const viewImage = viewImageId ? campaignImages.find((i) => i.id === viewImageId) : null;
   const [newName, setNewName] = useState("");
+  const [newDescription, setNewDescription] = useState("");
   const [newCategory, setNewCategory] = useState<ImageCategory>("scene");
   const [newDataUri, setNewDataUri] = useState("");
   const [newSize, setNewSize] = useState(0);
@@ -76,14 +80,52 @@ export default function ImagesPage() {
   const folderInputRef = useRef<HTMLInputElement>(null);
   const multiFileInputRef = useRef<HTMLInputElement>(null);
 
-  // Category edit state
-  const [editCategoryImageId, setEditCategoryImageId] = useState<string | null>(null);
-  const editCategoryImage = editCategoryImageId ? campaignImages.find((i) => i.id === editCategoryImageId) : null;
+  // Edit (name / description / category) state
+  const [editImageId, setEditImageId] = useState<string | null>(null);
+  const editImage = editImageId ? campaignImages.find((i) => i.id === editImageId) : null;
+  const [editName, setEditName] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [editCategory, setEditCategory] = useState<ImageCategory>("scene");
+
+  // Hydrate the edit form whenever a new image is opened for editing.
+  useEffect(() => {
+    if (editImage) {
+      setEditName(editImage.name);
+      setEditDescription(editImage.description ?? "");
+      setEditCategory(editImage.category);
+    }
+  }, [editImageId, editImage]);
 
   const totalBytes = useMemo(
     () => campaignImages.reduce((sum, img) => sum + img.sizeBytes, 0),
     [campaignImages]
   );
+
+  // Real browser storage quota (origin-wide), refreshed as images change.
+  // Falls back to a fixed denominator if the Storage API is unavailable.
+  const FALLBACK_QUOTA = 500 * 1024 * 1024;
+  const [storage, setStorage] = useState<{ usage: number; quota: number } | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (typeof navigator !== "undefined" && navigator.storage?.estimate) {
+      navigator.storage
+        .estimate()
+        .then((est) => {
+          if (!cancelled) {
+            setStorage({ usage: est.usage ?? 0, quota: est.quota ?? FALLBACK_QUOTA });
+          }
+        })
+        .catch(() => {});
+    }
+    return () => {
+      cancelled = true;
+    };
+  }, [images.length, totalBytes, FALLBACK_QUOTA]);
+
+  const storageUsed = storage?.usage ?? totalBytes;
+  const storageQuota = storage?.quota ?? FALLBACK_QUOTA;
+  const storagePct = Math.min((storageUsed / storageQuota) * 100, 100);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -101,11 +143,13 @@ export default function ImagesPage() {
     addImage({
       campaignId,
       name: newName.trim(),
+      description: newDescription.trim() || undefined,
       category: newCategory,
       dataUri: newDataUri,
       sizeBytes: newSize,
     });
     setNewName("");
+    setNewDescription("");
     setNewDataUri("");
     setNewSize(0);
     setNewCategory("scene");
@@ -145,9 +189,18 @@ export default function ImagesPage() {
     if (multiFileInputRef.current) multiFileInputRef.current.value = "";
   }, [bulkFiles, bulkCategory, campaignId, addImage]);
 
-  const handleCategoryChange = (imageId: string, newCat: ImageCategory) => {
-    updateImage(imageId, { category: newCat });
-    setEditCategoryImageId(null);
+  const handleSaveEdit = () => {
+    if (!editImageId || !editName.trim()) return;
+    updateImage(editImageId, {
+      name: editName.trim(),
+      description: editDescription.trim() || undefined,
+      category: editCategory,
+    });
+    setEditImageId(null);
+  };
+
+  const handlePresent = (imageId: string) => {
+    openPresentWindow(`/present?img=${imageId}`);
   };
 
   const renderImageGrid = (imgs: typeof campaignImages) => {
@@ -162,7 +215,7 @@ export default function ImagesPage() {
     return (
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
         {imgs.map((img) => (
-          <ImageCard key={img.id} img={img} onDelete={deleteImage} onView={setViewImageId} onEditCategory={setEditCategoryImageId} />
+          <ImageCard key={img.id} img={img} onDelete={deleteImage} onView={setViewImageId} onEdit={setEditImageId} onPresent={handlePresent} />
         ))}
       </div>
     );
@@ -270,6 +323,15 @@ export default function ImagesPage() {
                     />
                   </div>
                   <div className="space-y-2">
+                    <Label>Description <span className="text-muted-foreground font-normal">(optional)</span></Label>
+                    <Textarea
+                      value={newDescription}
+                      onChange={(e) => setNewDescription(e.target.value)}
+                      placeholder="Notes about this image..."
+                      rows={2}
+                    />
+                  </div>
+                  <div className="space-y-2">
                     <Label>Category</Label>
                     <Select
                       value={newCategory}
@@ -323,18 +385,19 @@ export default function ImagesPage() {
         }
       />
 
-      {/* Storage indicator */}
+      {/* Storage indicator — reflects real browser storage quota */}
       <div className="space-y-1">
         <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <span>Storage Used</span>
-          <span>{formatBytes(totalBytes)}</span>
+          <span>Storage Used{storage ? "" : " (this campaign)"}</span>
+          <span>
+            {formatBytes(storageUsed)} / {formatBytes(storageQuota)}
+            {" "}({storagePct.toFixed(storagePct < 1 ? 1 : 0)}%)
+          </span>
         </div>
         <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
           <div
             className="h-full rounded-full bg-primary transition-all"
-            style={{
-              width: `${Math.min((totalBytes / (50 * 1024 * 1024)) * 100, 100)}%`,
-            }}
+            style={{ width: `${storagePct}%` }}
           />
         </div>
       </div>
@@ -363,28 +426,60 @@ export default function ImagesPage() {
         ))}
       </Tabs>
 
-      {/* Category Edit Dialog */}
-      <Dialog open={!!editCategoryImageId} onOpenChange={(open) => { if (!open) setEditCategoryImageId(null); }}>
-        <DialogContent className="sm:max-w-xs">
+      {/* Edit Image Dialog — name, description, category */}
+      <Dialog open={!!editImageId} onOpenChange={(open) => { if (!open) setEditImageId(null); }}>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Change Category</DialogTitle>
+            <DialogTitle>Edit Image</DialogTitle>
             <DialogDescription>
-              {editCategoryImage ? `Update category for "${editCategoryImage.name}"` : ""}
+              Update the name, description, and category.
             </DialogDescription>
           </DialogHeader>
-          <div className="grid grid-cols-1 gap-2">
-            {CATEGORIES.map((cat) => (
-              <Button
-                key={cat}
-                variant={editCategoryImage?.category === cat ? "default" : "outline"}
-                className="justify-start"
-                onClick={() => editCategoryImageId && handleCategoryChange(editCategoryImageId, cat)}
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Name</Label>
+              <Input
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                placeholder="Image name"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Description <span className="text-muted-foreground font-normal">(optional)</span></Label>
+              <Textarea
+                value={editDescription}
+                onChange={(e) => setEditDescription(e.target.value)}
+                placeholder="Notes about this image..."
+                rows={3}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Category</Label>
+              <Select
+                value={editCategory}
+                onValueChange={(val) => val && setEditCategory(val as ImageCategory)}
               >
-                <Tag className="mr-2 size-4" />
-                {CATEGORY_LABELS[cat]}
-              </Button>
-            ))}
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {CATEGORIES.map((cat) => (
+                    <SelectItem key={cat} value={cat}>
+                      {CATEGORY_LABELS[cat]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditImageId(null)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveEdit} disabled={!editName.trim()}>
+              Save Changes
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
@@ -394,39 +489,81 @@ export default function ImagesPage() {
           className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center cursor-pointer"
           onClick={() => setViewImageId(null)}
         >
-          <StoredImg
-            imageId={viewImageId}
-            alt="Full view"
-            className="max-w-[90vw] max-h-[90vh] object-contain"
-          />
+          <Button
+            variant="secondary"
+            className="absolute top-4 right-4 z-10"
+            onClick={(e) => { e.stopPropagation(); handlePresent(viewImageId); }}
+          >
+            <MonitorPlay data-icon="inline-start" />
+            Present to Players
+          </Button>
+          <figure className="flex flex-col items-center gap-3" onClick={(e) => e.stopPropagation()}>
+            <StoredImg
+              imageId={viewImageId}
+              alt={viewImage?.name ?? "Full view"}
+              className="max-w-[90vw] max-h-[80vh] object-contain cursor-default"
+            />
+            {viewImage && (viewImage.name || viewImage.description) && (
+              <figcaption className="max-w-[90vw] text-center text-white">
+                <p className="text-sm font-medium">{viewImage.name}</p>
+                {viewImage.description && (
+                  <p className="mt-1 text-xs text-white/70 whitespace-pre-wrap">{viewImage.description}</p>
+                )}
+              </figcaption>
+            )}
+          </figure>
         </div>
       )}
     </div>
   );
 }
 
-function ImageCard({ img, onDelete, onView, onEditCategory }: { img: StoredImage; onDelete: (id: string) => void; onView: (id: string) => void; onEditCategory: (id: string) => void }) {
+function ImageCard({ img, onDelete, onView, onEdit, onPresent }: { img: StoredImage; onDelete: (id: string) => void; onView: (id: string) => void; onEdit: (id: string) => void; onPresent: (id: string) => void }) {
   return (
     <div className="group rounded-md border overflow-hidden bg-card">
       <div className="cursor-pointer relative" onDoubleClick={() => onView(img.id)}>
         <StoredImg imageId={img.id} alt={img.name} className="h-24 w-full object-cover object-top" />
         <Button
-          variant="destructive"
+          variant="secondary"
           size="icon-xs"
-          className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity"
-          onClick={(e) => { e.stopPropagation(); onDelete(img.id); }}
+          className="absolute top-1 left-1 opacity-0 group-hover:opacity-100 transition-opacity"
+          title="Present to players"
+          onClick={(e) => { e.stopPropagation(); onPresent(img.id); }}
         >
-          <Trash2 />
+          <MonitorPlay />
         </Button>
+        <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <Button
+            variant="secondary"
+            size="icon-xs"
+            title="Edit image"
+            onClick={(e) => { e.stopPropagation(); onEdit(img.id); }}
+          >
+            <Pencil />
+          </Button>
+          <Button
+            variant="destructive"
+            size="icon-xs"
+            title="Delete image"
+            onClick={(e) => { e.stopPropagation(); onDelete(img.id); }}
+          >
+            <Trash2 />
+          </Button>
+        </div>
       </div>
       <div className="px-2 py-1.5">
         <p className="text-xs font-medium truncate" title={img.name}>{img.name}</p>
+        {img.description && (
+          <p className="text-[10px] text-muted-foreground line-clamp-2 mt-0.5" title={img.description}>
+            {img.description}
+          </p>
+        )}
         <div className="flex items-center justify-between mt-0.5">
           <button
             type="button"
             className={`text-[10px] rounded px-1 py-0.5 cursor-pointer hover:ring-1 hover:ring-primary/50 transition-all ${CATEGORY_COLORS[img.category]}`}
-            onClick={() => onEditCategory(img.id)}
-            title="Click to change category"
+            onClick={() => onEdit(img.id)}
+            title="Click to edit"
           >
             {CATEGORY_LABELS[img.category]}
           </button>

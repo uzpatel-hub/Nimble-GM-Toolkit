@@ -31,8 +31,9 @@ import { Separator } from '@/components/ui/separator';
 import { ChatPanel } from '@/components/chat/ChatPanel';
 import { ImagePicker } from '@/components/layout/ImagePicker';
 import { openPresentWindow } from '@/lib/present-window';
-import { Minus, Plus, RotateCcw, Check } from 'lucide-react';
+import { Minus, Plus, RotateCcw, Check, Pencil } from 'lucide-react';
 import { EncounterBudget } from '@/components/session/EncounterBudget';
+import { SessionRenameDialog } from '@/components/session/SessionRenameDialog';
 import type { ChecklistItem, Encounter, Session, SessionEncounter, SessionEncounterType } from '@/types';
 
 export default function SessionDetailPage() {
@@ -56,6 +57,7 @@ export default function SessionDetailPage() {
   const [newChecklistItem, setNewChecklistItem] = useState('');
   const [sessionEncounters, setSessionEncounters] = useState<SessionEncounter[]>([]);
   const [hasChanges, setHasChanges] = useState(false);
+  const [renaming, setRenaming] = useState(false);
 
   // Session encounter form state
   const [sessionPartyLevel, setSessionPartyLevel] = useState<number | null>(null);
@@ -272,6 +274,10 @@ export default function SessionDetailPage() {
         description={campaign.name}
         actions={
           <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setRenaming(true)}>
+              <Pencil data-icon="inline-start" />
+              Rename
+            </Button>
             <ImagePicker campaignId={campaignId} />
             <Link href={`/campaign/${campaignId}/sessions`}>
               <Button variant="outline">Back to Sessions</Button>
@@ -281,6 +287,11 @@ export default function SessionDetailPage() {
             </Button>
           </div>
         }
+      />
+
+      <SessionRenameDialog
+        session={renaming ? session : null}
+        onClose={() => setRenaming(false)}
       />
 
       {/* Party banner */}
