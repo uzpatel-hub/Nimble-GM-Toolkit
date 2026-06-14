@@ -22,7 +22,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { ImagePlus, Trash2 } from 'lucide-react';
+import { ImagePlus, Trash2, Bird, Skull } from 'lucide-react';
 import type { MonsterAbility, MonsterSize, ArmorType } from '@/types';
 import { MONSTER_STATS_BY_LEVEL } from '@/data/monster-tables';
 
@@ -47,6 +47,8 @@ export default function NewMonsterPage() {
   const [saveDC, setSaveDC] = useState<number | undefined>(undefined);
   const [specialMovement, setSpecialMovement] = useState('');
   const [abilities, setAbilities] = useState<MonsterAbility[]>([]);
+  const [tipGenerous, setTipGenerous] = useState('');
+  const [tipDeadly, setTipDeadly] = useState('');
   const [imageDataUri, setImageDataUri] = useState<string | undefined>(undefined);
 
   function addAbility() {
@@ -89,6 +91,8 @@ export default function NewMonsterPage() {
       saveDC,
       specialMovement: specialMovement.trim() || undefined,
       abilities: abilities.filter((a) => a.name.trim()),
+      tipGenerous: tipGenerous.trim() || undefined,
+      tipDeadly: tipDeadly.trim() || undefined,
       isCustom: true,
       imageDataUri,
     });
@@ -376,6 +380,40 @@ export default function NewMonsterPage() {
                   </div>
                 </div>
               ))}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>GM Tips</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="tip-generous" className="flex items-center gap-1.5">
+                  <Bird className="size-4 text-emerald-500" />
+                  Generous (play it kind)
+                </Label>
+                <Textarea
+                  id="tip-generous"
+                  value={tipGenerous}
+                  onChange={(e) => setTipGenerous(e.target.value)}
+                  placeholder="How to play this monster to go easier on the party..."
+                  rows={2}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="tip-deadly" className="flex items-center gap-1.5">
+                  <Skull className="size-4 text-destructive" />
+                  Deadly (play it hard)
+                </Label>
+                <Textarea
+                  id="tip-deadly"
+                  value={tipDeadly}
+                  onChange={(e) => setTipDeadly(e.target.value)}
+                  placeholder="How to play this monster to challenge the party..."
+                  rows={2}
+                />
+              </div>
             </CardContent>
           </Card>
 

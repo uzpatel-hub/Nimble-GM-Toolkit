@@ -3,7 +3,7 @@
 import { useState, useMemo, useRef, useCallback, useEffect } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Shield, Check, Swords, Heart, Undo2 } from "lucide-react";
+import { ArrowLeft, Shield, Check, Swords, Heart, Undo2, Bird, Skull } from "lucide-react";
 import { useEncounterStore } from "@/stores/encounter-store";
 import { useMonsterStore } from "@/stores/monster-store";
 import { useCampaignStore } from "@/stores/campaign-store";
@@ -381,7 +381,7 @@ export default function RunEncounterPage() {
       {/* Two-panel layout */}
       <div className="flex flex-1 min-h-0 overflow-hidden">
         {/* LEFT: Tracker */}
-        <div className="w-1/2 border-r overflow-y-auto">
+        <div className="w-2/5 border-r overflow-y-auto">
           {/* Players section */}
             {players.length > 0 && (
               <>
@@ -574,7 +574,7 @@ export default function RunEncounterPage() {
         </div>
 
         {/* RIGHT: All monster stat blocks + conditions */}
-        <div className="w-1/2 overflow-y-auto p-4 space-y-4" ref={detailPanelRef}>
+        <div className="w-3/5 overflow-y-auto p-4 space-y-4" ref={detailPanelRef}>
           {uniqueMonsters.map((m) => {
             const isHighlighted = selectedEntity?.kind === "monster" && selectedEntity.monster?.id === m.id;
             return (
@@ -630,6 +630,34 @@ export default function RunEncounterPage() {
                     {m.abilities.map((ability, idx) => (
                       <AbilityBlock key={idx} ability={ability} />
                     ))}
+                  </div>
+                )}
+
+                {/* GM tips — how to play it generously or deadly */}
+                {(m.tipGenerous || m.tipDeadly) && (
+                  <div className="space-y-1.5 pt-1">
+                    {m.tipGenerous && (
+                      <div className="flex gap-2 rounded border border-emerald-500/30 bg-emerald-500/5 px-2 py-1.5">
+                        <Bird className="size-4 shrink-0 text-emerald-500 mt-0.5" />
+                        <div className="min-w-0">
+                          <span className="text-[10px] font-semibold uppercase tracking-wider text-emerald-500/90">
+                            Generous
+                          </span>
+                          <p className="text-sm leading-snug">{m.tipGenerous}</p>
+                        </div>
+                      </div>
+                    )}
+                    {m.tipDeadly && (
+                      <div className="flex gap-2 rounded border border-destructive/30 bg-destructive/5 px-2 py-1.5">
+                        <Skull className="size-4 shrink-0 text-destructive mt-0.5" />
+                        <div className="min-w-0">
+                          <span className="text-[10px] font-semibold uppercase tracking-wider text-destructive/90">
+                            Deadly
+                          </span>
+                          <p className="text-sm leading-snug">{m.tipDeadly}</p>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

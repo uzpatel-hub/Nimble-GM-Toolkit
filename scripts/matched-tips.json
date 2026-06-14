@@ -1,0 +1,967 @@
+{
+  "Bugbear": {
+    "generous": "Attack from Range or spread damage out. Attack first in a round while heroes can still Interpose & Defend.",
+    "deadly": "Bugbears are patient ambushers,they can start combat hidden, attacking any hero who has strayed too far from his party, or their back lines."
+  },
+  "Bugbear Chieftain": {
+    "generous": "Use cleave to also strike a goblin that is in your way.",
+    "deadly": "Target only heroes. Force a goblin to Interpose for you."
+  },
+  "Krogg, Goblin King": {
+    "generous": "Have the Manglemaul jam after using Crack Skulls. Krogg gets verbally frustrated with the “stupid weapon” it loses the ability to Grapple, or he could spend a turn fixing it.",
+    "deadly": "Manglemaul may retain the Grappled target, so Crack Skulls can be used again next turn. Or you could also knock heroes Prone after Cracking Skulls. Move more frequently, end your turn out of reach of melee heroes."
+  },
+  "Goblin": {
+    "generous": "Very injured Goblins can run past multiple heroes, and less injured Goblins can remain adjacent to melee heroes rather than running away to same them an action moving.",
+    "deadly": "If a hero is within Reach 6, run up to them, stab, then run away in hopes of triggering an Opportunity Attack. Goad heroes into it with verbal taunts: \"You can't catch me!\" feigning fear (especially if you miss, or seeing them survive your best stab) \"Ahh! Run awaayy!\""
+  },
+  "Goblin Ratrider": {
+    "generous": "Can stay more stationary or spread their damage around, don't attack Prone targets.",
+    "deadly": "Hunt down backline and isolated heroes. Stay out of reach of melee heroes, set up powerful attacks for Bugbears when they knock Heroes Prone."
+  },
+  "Goblin Taskmaster": {
+    "generous": "May \"run out\" of minions to call to the battlefield or their minions may be out of position to Interpose for them.",
+    "deadly": "Keep a minion within Interpose range at all times!"
+  },
+  "Nilbog": {
+    "generous": "Stay near heroes with smaller weapons (d4, d6) or Cheats. Keep Goblins at a distance.",
+    "deadly": "Stay near heroes with larger weapons (d10, d12) who will have a harder time hitting. Constantly move Goblins in and out of melee range."
+  },
+  "Vermis & Skittersnack": {
+    "generous": "When using Chaaarrge!, ensure you hit minions, and fewer heroes. Keep giant fleas clumped up or near heroes that can easily use an AoE, so they are easier to eliminate.",
+    "deadly": "Line up multiple heroes with Chaaarrge! Kill as few of your own minions as possible. Spread out giant fleas so they are harder to kill in large numbers."
+  },
+  "Kobold": {
+    "generous": "Attack from Range, and stay spread out.",
+    "deadly": "Keep them close together to maximize Nooooo!"
+  },
+  "Kobold Sneak": {
+    "generous": "Stay on the frontlines, making them likely to die before making use of their ability.",
+    "deadly": "Keep them away from danger, but always close enough to dash in when an ally dies."
+  },
+  "Kobold Trapper": {
+    "generous": "Damage (but don't kill) other kobolds with BEES!",
+    "deadly": "Position yourself to use BEES! to strike multiple heroes, and kill 1 weakened kobold to trigger lots of Nooooo! attacks."
+  },
+  "Kobold Clanger": {
+    "generous": "Wander close into battle. Being Grappled or knocked Prone could temporarily silence them.",
+    "deadly": "Keep them in the back lines and running away from heroes. Never end your turn within reach of a melee hero, or without cover from ranged attacks!"
+  },
+  "Kobold Denwarden": {
+    "generous": "Keep them separated from allies, and spread their attacks between heroes.",
+    "deadly": "Place them in the center of Kobold lines, increasing the power of both \"Hold!\" and \"Nooooo!\""
+  },
+  "Kobold Dragon Relic": {
+    "generous": "Spread Kobolds out, making the Relic easy to attack and reducing the times each Kobold can attack. Ignore the 1 damage/turn limit.",
+    "deadly": "A very special relic could also double the Reach of Nooooo! Or it could also trigger whenever the relic is attacked."
+  },
+  "Narbles & His Stack of Friends": {
+    "generous": "Stab targets that area already poisoned. Skip the immediate turn at Bloodied and Last Stand, if needed.",
+    "deadly": "When using Stab, always attack targets that are not Poisoned. When you reach Last Stand, Narbles uses the pan more effectively as a shield, giving him H armor instead of M."
+  },
+  "Cricket & Hamshake": {
+    "generous": "Have Cricket attack more often than Hamshake. Allow the duo to separate a good distance from each other, making Interposing harder.",
+    "deadly": "Have Hamshake attack more often than Cricket. Keep the duo together, for easier Interposing."
+  },
+  "Faerie Troubadour": {
+    "generous": "Isolate yourself from other Fey to limit your boons.",
+    "deadly": "Stay near allies to grant them additional survivability."
+  },
+  "Faerie Merrymaker": {
+    "generous": "Choose Sticky Gum vs Ranged heroes.",
+    "deadly": "Combo Smelly Gas with Faerie Troubadour's Clamorous Chorus."
+  },
+  "Faerie Trickmage": {
+    "generous": "Swap positions with your minions.",
+    "deadly": "Swap positions so the Heroes hit each other with attacks, and focus your minions one one Hero."
+  },
+  "Satyr": {
+    "generous": "Leap away from ranged heroes, do not leap away from melee-focused heroes.",
+    "deadly": "Stay adjacent to ranged heroes making them move or attack with disadvantage; or leap away from melee-focused heroes to make them spend actions moving."
+  },
+  "Faerie Dragon": {
+    "generous": "Focus on unarmored Heroes, and use Liminal Breath on one or two targets.",
+    "deadly": "Use Enchanting Touch to separate a heavily armored heroes from the party, setup a long Centaur charge, or to group heroes together for Liminal Breath"
+  },
+  "Centaur": {
+    "generous": "Stay in melee combat after charging in.",
+    "deadly": "Maximize the distance you Charge each turn."
+  },
+  "Unicorn": {
+    "generous": "Stay near other monsters and have them Interpose for you instead of a Hero.",
+    "deadly": "Use Luminous Horn at every opportunity. Stay near a Hero, to use Radiant Beauty on them."
+  },
+  "Sprite": {
+    "generous": "Stay in melee with Heroes.",
+    "deadly": "Attack at max Reach and move each turn."
+  },
+  "Forest Gnome": {
+    "generous": "Leap off a target after 1 round.",
+    "deadly": "Ride and attack the same target as long as possible."
+  },
+  "Redcap": {
+    "generous": "Use Iron Boots, even against Prone creatures. Target high defense heroes",
+    "deadly": "Many Redcaps can gang up on a single target."
+  },
+  "Jabberwocky": {
+    "generous": "Use actions from Mad Babbling to move Heroes randomly, and attack each other. Use Claws That Catch more often.",
+    "deadly": "Use actions from Mad Babbling to set up attacks for other monsters, such as Bogeys and Nixies, and to attack or interpose against each other. Use Jaws that Bite more often."
+  },
+  "Will-o-Wisp": {
+    "generous": "When hit, teleport near another Hero. Use Lure to move Heroes without purpose.",
+    "deadly": "When hit, teleport out of melee/movement range. Use Lure to separate the party, with hazards, or set up stronger monster attacks, like a Nixie in water."
+  },
+  "Brollachan": {
+    "generous": "Use the target’s action to attack higher armor Heroes.",
+    "deadly": "Use the target’s action to move them next to a stronger monster, like a Bogey, a Nixie in water, or to deal damage to a weaker Hero."
+  },
+  "Nixie": {
+    "generous": "Leave the water to chase down heroes.",
+    "deadly": "If possible, stay in the water and have other monsters (Brollican, Will-o-Wisp, or Bogey) bring targets to you,"
+  },
+  "Gremlin": {
+    "generous": "Taunt melee heroes that are near you.",
+    "deadly": "Taunt with a Gremlin that is further away or behind cover and not riding a hero; this makes all attacks against riding Gremlins made with disadvantage and more likely to hit the hero they're riding!"
+  },
+  "Gremlin Wrestler": {
+    "generous": "Switch from hero to hero, abstain from knocking Prone.",
+    "deadly": "Focus on one hero, knock Prone as much as possible. Always Taunt with the highest HP gremlin to protect those who are lower on HP."
+  },
+  "Gremlin Roastmaster": {
+    "generous": "Limit \"Take a look at this tough guy!\" to 1/round.",
+    "deadly": "Stay near the heroes that are attacking taunting Gremlins to activate “Take a look at this tough guy!” as often as possible. Focus your Cheap Shots on heroes that are being hampered by Wrestlers."
+  },
+  "Bogey": {
+    "generous": "Focus on isolated heroes.",
+    "deadly": "Stay near groups of heroes to maximize damage."
+  },
+  "Razzle, Gremlin Iconoclast": {
+    "generous": "Have your minions spread out and attack many different heroes. Summon fewer minions when Bloodied and at his Last Stand.",
+    "deadly": "Have minions prioritize Blinded and Ridden heroes for more damage. Increment the damage die on all his minions from d6 to d10."
+  },
+  "Mav, The Winter Queen": {
+    "generous": "Stray outside of your Winter’s Wrath, preventing heroes from taking damage in it. Her Wind Ward could falter after taking a crit, or Fire damage. Icy shards can deal less damage or be destroyed once used.",
+    "deadly": "Stay within Winter’s Wrath and make the heroes come to you. Drag and push heroes into the storm. Keep ranged attackers outside of your Wind Ward. At Last Stand, use Stormlord’s Gust to more heroes across as many shards as possible."
+  },
+  "Bandit Hunter": {
+    "generous": "Stay near melee heroes to attack with disadvantage.",
+    "deadly": "Move each turn, stay at max Range and seek cover."
+  },
+  "Bandit Assassin": {
+    "generous": "Hint at their presence, allow heroes a chance to spot them before they attack. Target already Dazed heroes.",
+    "deadly": "Spread Dazed out as much as possible. Have extra Assassins join combat midway through once melee heroes who could interpose are already occupied."
+  },
+  "Bandit Mage": {
+    "generous": "Strike heroes who are near bandits to include them in the damage. Teleport to poor locations.",
+    "deadly": "Teleport up high (e.g., into trees, cliffsides), or into cover."
+  },
+  "Bandit Captain": {
+    "generous": "Attack from Range",
+    "deadly": "Get into the thick of the action and deal far more damage."
+  },
+  "Bandit Ice Mage": {
+    "deadly": "Target melee heroes to slow them down then run away!"
+  },
+  "Bandit Fire Mage": {
+    "generous": "Move allies with heart's fire instead of attacking mroe often.",
+    "deadly": "Select bandits with powerful single attacks like bruisers, hunters, or mages."
+  },
+  "Berserker (lvl 2)": {
+    "generous": "When using Whirlwind, position so that you hit fewer heroes, and sometimes hit your own allies or minions.",
+    "deadly": "Get in close, and make the best use of Whirlwind, by hitting as many heroes as possible. Try to attract as much attention as possible, to make the most of “That all you got?!”"
+  },
+  "Berserker (lvl 4)": {
+    "generous": "When using Whirlwind, position so that you hit fewer heroes, and sometimes hit your own allies or minions.",
+    "deadly": "Get in close, and make the best use of Whirlwind, by hitting as many heroes as possible. Try to attract as much attention as possible, to make the most of “That all you got?!”"
+  },
+  "Berserker (lvl 6)": {
+    "generous": "When using Whirlwind, position so that you hit fewer heroes, and sometimes hit your own allies or minions.",
+    "deadly": "Get in close, and make the best use of Whirlwind, by hitting as many heroes as possible. Try to attract as much attention as possible, to make the most of “That all you got?!”"
+  },
+  "Berserker (lvl 10)": {
+    "generous": "When using Whirlwind, position so that you hit fewer heroes, and sometimes hit your own allies or minions.",
+    "deadly": "Get in close, and make the best use of Whirlwind, by hitting as many heroes as possible. Try to attract as much attention as possible, to make the most of “That all you got?!”"
+  },
+  "The Cheat (lvl 2)": {
+    "generous": "Stay in melee between attacks, attack high Defense targets.",
+    "deadly": "Move in and out of melee range, ensuring you end your turn in a safe place. Attack lower defense targets, and those you can get advantage against."
+  },
+  "The Cheat (lvl 4)": {
+    "generous": "Stay in melee between attacks, attack high Defense targets.",
+    "deadly": "Move in and out of melee range, ensuring you end your turn in a safe place. Attack lower defense targets, and those you can get advantage against."
+  },
+  "The Cheat (lvl 6)": {
+    "generous": "Stay in melee between attacks, attack high Defense targets.",
+    "deadly": "Move in and out of melee range, ensuring you end your turn in a safe place. Attack lower defense targets, and those you can get advantage against."
+  },
+  "The Cheat (lvl 10)": {
+    "generous": "Stay in melee between attacks, attack high Defense targets.",
+    "deadly": "Move in and out of melee range, ensuring you end your turn in a safe place. Attack lower defense targets, and those you can get advantage against."
+  },
+  "Commander (lvl 2)": {
+    "generous": "Attack adjacent heroes, leaving yourself open to attack. Decline using Command.",
+    "deadly": "Attack from Reach 2, and keep your distance from the heroes. Use Command on the most powerful ally you have (Mage, Oathsworn who has been attacked, or Shadowmancer with lots of minions)."
+  },
+  "Commander (lvl 4)": {
+    "generous": "Attack adjacent heroes, leaving yourself open to attack. Decline using Command.",
+    "deadly": "Attack from Reach 2, and keep your distance from the heroes. Use Command on the most powerful ally you have (Mage, Oathsworn who has been attacked, or Shadowmancer with lots of minions)."
+  },
+  "Commander (lvl 6)": {
+    "generous": "Attack adjacent heroes, leaving yourself open to attack. Decline using Command.",
+    "deadly": "Attack from Reach 2, and keep your distance from the heroes. Use Command on the most powerful ally you have (Mage, Oathsworn who has been attacked, or Shadowmancer with lots of minions)."
+  },
+  "Commander (lvl 10)": {
+    "generous": "Attack adjacent heroes, leaving yourself open to attack. Decline using Command.",
+    "deadly": "Attack from Reach 2, and keep your distance from the heroes. Use Command on the most powerful ally you have (Mage, Oathsworn who has been attacked, or Shadowmancer with lots of minions)."
+  },
+  "Hunter (lvl 2)": {
+    "generous": "Allow melee combatants to close in on you, decline using your trap.",
+    "deadly": "Start combat positioned on high ground, move to a new position each turn to stay at long range."
+  },
+  "Hunter (lvl 4)": {
+    "generous": "Allow melee combatants to close in on you, decline using your trap.",
+    "deadly": "Start combat positioned on high ground, move to a new position each turn to stay at long range."
+  },
+  "Hunter (lvl 6)": {
+    "generous": "Allow melee combatants to close in on you, decline using your trap.",
+    "deadly": "Start combat positioned on high ground, move to a new position each turn to stay at long range."
+  },
+  "Hunter (lvl 10)": {
+    "generous": "Allow melee combatants to close in on you, decline using your trap.",
+    "deadly": "Start combat positioned on high ground, move to a new position each turn to stay at long range."
+  },
+  "Mage (lvl 2)": {
+    "generous": "Use Flamethrower wrecklessly, sometimes catching your allies in the damage.",
+    "deadly": "Focus on using Flame Blast. Only use Flamethrower you can get 2 or more heroes in it."
+  },
+  "Mage (lvl 4)": {
+    "generous": "Use Flamethrower wrecklessly, sometimes catching your allies in the damage.",
+    "deadly": "Focus on using Flame Blast. Only use Flamethrower you can get 2 or more heroes in it."
+  },
+  "Mage (lvl 6)": {
+    "generous": "Use Flamethrower wrecklessly, sometimes catching your allies in the damage.",
+    "deadly": "Focus on using Flame Blast. Only use Flamethrower you can get 2 or more heroes in it."
+  },
+  "Mage (lvl 10)": {
+    "generous": "Use Flamethrower wrecklessly, sometimes catching your allies in the damage.",
+    "deadly": "Focus on using Flame Blast. Only use Flamethrower you can get 2 or more heroes in it."
+  },
+  "Oathsworn (lvl 2)": {
+    "generous": "Chase down ranged heroes by yourself, and stay out of position so you can't Interpose. Or Interpose VS crits that ignore your Heavy armor.",
+    "deadly": "Stick close by allies who need protection (namely Mages, Shadowmancers, and Songweavers). Interpose against non-critical hits."
+  },
+  "Oathsworn (lvl 4)": {
+    "generous": "Chase down ranged heroes by yourself, and stay out of position so you can't Interpose. Or Interpose VS crits that ignore your Heavy armor.",
+    "deadly": "Stick close by allies who need protection (namely Mages, Shadowmancers, and Songweavers). Interpose against non-critical hits."
+  },
+  "Oathsworn (lvl 6)": {
+    "generous": "Chase down ranged heroes by yourself, and stay out of position so you can't Interpose. Or Interpose VS crits that ignore your Heavy armor.",
+    "deadly": "Stick close by allies who need protection (namely Mages, Shadowmancers, and Songweavers). Interpose against non-critical hits."
+  },
+  "Oathsworn (lvl 10)": {
+    "generous": "Chase down ranged heroes by yourself, and stay out of position so you can't Interpose. Or Interpose VS crits that ignore your Heavy armor.",
+    "deadly": "Stick close by allies who need protection (namely Mages, Shadowmancers, and Songweavers). Interpose against non-critical hits."
+  },
+  "Shadowmancer (lvl 2)": {
+    "generous": "Wait until the next round to attack with newly summoned minions. Group them near heroes with high Defense or ones that can easily AoE them down.",
+    "deadly": "Stay behind cover toward the back lines and continually send in waves of minions, spread their attacks out"
+  },
+  "Shadowmancer (lvl 4)": {
+    "generous": "Wait until the next round to attack with newly summoned minions. Group them near heroes with high Defense or ones that can easily AoE them down.",
+    "deadly": "Stay behind cover toward the back lines and continually send in waves of minions, spread their attacks out"
+  },
+  "Shadowmancer (lvl 6)": {
+    "generous": "Wait until the next round to attack with newly summoned minions. Group them near heroes with high Defense or ones that can easily AoE them down.",
+    "deadly": "Stay behind cover toward the back lines and continually send in waves of minions, spread their attacks out"
+  },
+  "Shadowmancer (lvl 10)": {
+    "generous": "Wait until the next round to attack with newly summoned minions. Group them near heroes with high Defense or ones that can easily AoE them down.",
+    "deadly": "Stay behind cover toward the back lines and continually send in waves of minions, spread their attacks out"
+  },
+  "Shepherd (lvl 2)": {
+    "generous": "Use Radiant Strike against heroes with low defense.",
+    "deadly": "Combos extremely well with Shadowmancer's minions! Use Final Judgement whenever possible, use Radiant Strike against heroes with high Defense."
+  },
+  "Shepherd (lvl 4)": {
+    "generous": "Use Radiant Strike against heroes with low defense.",
+    "deadly": "Combos extremely well with Shadowmancer's minions! Use Final Judgement whenever possible, use Radiant Strike against heroes with high Defense."
+  },
+  "Shepherd (lvl 6)": {
+    "generous": "Use Radiant Strike against heroes with low defense.",
+    "deadly": "Combos extremely well with Shadowmancer's minions! Use Final Judgement whenever possible, use Radiant Strike against heroes with high Defense."
+  },
+  "Shepherd (lvl 10)": {
+    "generous": "Use Radiant Strike against heroes with low defense.",
+    "deadly": "Combos extremely well with Shadowmancer's minions! Use Final Judgement whenever possible, use Radiant Strike against heroes with high Defense."
+  },
+  "Songweaver (lvl 2)": {
+    "generous": "Taunt heroes who were going to attack you anyway, decline to use your special ability.",
+    "deadly": "Save “I’m too pretty to die!” to redirect a powerful ranged attack. Taunt melee heroes that are far away, or ranged heroes you have Cover from. Combos well with Oathsworn!"
+  },
+  "Songweaver (lvl 4)": {
+    "generous": "Taunt heroes who were going to attack you anyway, decline to use your special ability.",
+    "deadly": "Save “I’m too pretty to die!” to redirect a powerful ranged attack. Taunt melee heroes that are far away, or ranged heroes you have Cover from. Combos well with Oathsworn!"
+  },
+  "Songweaver (lvl 6)": {
+    "generous": "Taunt heroes who were going to attack you anyway, decline to use your special ability.",
+    "deadly": "Save “I’m too pretty to die!” to redirect a powerful ranged attack. Taunt melee heroes that are far away, or ranged heroes you have Cover from. Combos well with Oathsworn!"
+  },
+  "Songweaver (lvl 10)": {
+    "generous": "Taunt heroes who were going to attack you anyway, decline to use your special ability.",
+    "deadly": "Save “I’m too pretty to die!” to redirect a powerful ranged attack. Taunt melee heroes that are far away, or ranged heroes you have Cover from. Combos well with Oathsworn!"
+  },
+  "Stormshifter (lvl 2)": {
+    "generous": "Let your Call Storm damage an ally sometimes, and use Beastshift against high Defense targets.",
+    "deadly": "Stay adjavent to heroes who want to attack frequently while Beastshifted, use your speed to move back out after attacking."
+  },
+  "Stormshifter (lvl 4)": {
+    "generous": "Let your Call Storm damage an ally sometimes, and use Beastshift against high Defense targets.",
+    "deadly": "Stay adjavent to heroes who want to attack frequently while Beastshifted, use your speed to move back out after attacking."
+  },
+  "Stormshifter (lvl 6)": {
+    "generous": "Let your Call Storm damage an ally sometimes, and use Beastshift against high Defense targets.",
+    "deadly": "Stay adjavent to heroes who want to attack frequently while Beastshifted, use your speed to move back out after attacking."
+  },
+  "Stormshifter (lvl 10)": {
+    "generous": "Let your Call Storm damage an ally sometimes, and use Beastshift against high Defense targets.",
+    "deadly": "Stay adjavent to heroes who want to attack frequently while Beastshifted, use your speed to move back out after attacking."
+  },
+  "Zephyr (lvl 2)": {
+    "generous": "Decline to use Blur, use your speed to move from target to target, speading your damage out.",
+    "deadly": "Harass heroes that are furthest from their allies. Stay near environmental cover, so that you can use Blur to avoid damage whenever possible."
+  },
+  "Zephyr (lvl 4)": {
+    "generous": "Decline to use Blur, use your speed to move from target to target, speading your damage out.",
+    "deadly": "Harass heroes that are furthest from their allies. Stay near environmental cover, so that you can use Blur to avoid damage whenever possible."
+  },
+  "Zephyr (lvl 6)": {
+    "generous": "Decline to use Blur, use your speed to move from target to target, speading your damage out.",
+    "deadly": "Harass heroes that are furthest from their allies. Stay near environmental cover, so that you can use Blur to avoid damage whenever possible."
+  },
+  "Zephyr (lvl 10)": {
+    "generous": "Decline to use Blur, use your speed to move from target to target, speading your damage out.",
+    "deadly": "Harass heroes that are furthest from their allies. Stay near environmental cover, so that you can use Blur to avoid damage whenever possible."
+  },
+  "Hexbinder (lvl 2)": {
+    "generous": "Use Hedge Curse on a hero that is unlikely to get attacked again, or act last in the round.",
+    "deadly": "Act first, so that an ally attacks your cursed target immediately."
+  },
+  "Hexbinder (lvl 4)": {
+    "generous": "Use Hedge Curse on a hero that is unlikely to get attacked again, or act last in the round.",
+    "deadly": "Act first, so that an ally attacks your cursed target immediately."
+  },
+  "Hexbinder (lvl 6)": {
+    "generous": "Use Hedge Curse on a hero that is unlikely to get attacked again, or act last in the round.",
+    "deadly": "Act first, so that an ally attacks your cursed target immediately."
+  },
+  "Hexbinder (lvl 10)": {
+    "generous": "Use Hedge Curse on a hero that is unlikely to get attacked again, or act last in the round.",
+    "deadly": "Act first, so that an ally attacks your cursed target immediately."
+  },
+  "Worg": {
+    "generous": "Switch between targets, minimizing time spent Grappling.",
+    "deadly": "Focus 1 target, especially if they have disadvantage on rolls."
+  },
+  "Griffon": {
+    "generous": "Stay low to the ground, and mostly use Talons.",
+    "deadly": "End turn in the air to avoid melee attacks. Use Fly & Drop as much as possible."
+  },
+  "Bulette": {
+    "generous": "Stay above ground, mostly using Leap & Bite.",
+    "deadly": "Drag Below as much as possible."
+  },
+  "Troll": {
+    "generous": "Switch between targets, mostly using Claws.",
+    "deadly": "Avoid heroes who can deal lethal damage (Mage, Oathbreaker, Cheat), and use Bite as much as possible."
+  },
+  "Roc": {
+    "generous": "Stay low to the ground, and grapple only one hero at a time.",
+    "deadly": "Keep to the skies to avoid melee heroes, while grappling ranged ones."
+  },
+  "Lion": {
+    "generous": "Stick to using Ferocious Leap, and avoid heroes who rolled badly on Initiative.",
+    "deadly": "Have one Lion knock a hero Prone, before having the rest use Maul."
+  },
+  "Lion Packleader": {
+    "generous": "Use Ferocious Leap over Maul, especially when Bloodied.",
+    "deadly": "Join the other lions in all Mauling one target."
+  },
+  "Ogre": {
+    "generous": "Switch between targets, mostly using Rock.",
+    "deadly": "Combine with Lions or Trolls who deal additional damage to Prone heroes."
+  },
+  "Manticore": {
+    "generous": "Use Stinger on heroes who are already very low on HP.",
+    "deadly": "Combo with creatures like Worgs & Griffons that Grapple, or creatures that can knock Prone like Lions and Trolls."
+  },
+  "Ettin": {
+    "generous": "Attack with the Morningstar first, allowing heroes to avoid being hit while Prone.",
+    "deadly": "Attack with the Club first, increasing the chance of landing a crit with the Morningstar."
+  },
+  "Hill Giant": {
+    "generous": "Punt Ranged heroes away to safety. Play into their stupidity, attack suboptimal targets (whichever is making the most noise, whichever hurt him last).",
+    "deadly": "Use Punt to separate heroes and kick them toward allies."
+  },
+  "Gnoll Hunter": {
+    "generous": "Mostly use melee attacks, attack undamaged heroes.",
+    "deadly": "Use ranged attacks to damage multiple targets."
+  },
+  "Gnoll Packleader": {
+    "generous": "Bark Orders to move Gnolls adjacent to heroes after the gnoll has already attacked.",
+    "deadly": "Bark Orders to move Gnolls to safety after they’ve acted, or to give them extra movement needed to chase down heroes hiding behind the frontliners."
+  },
+  "Gnoll Frenzied One": {
+    "generous": "Target well-armored or undamaged heroes. Have them ignore the Packleader's commands.",
+    "deadly": "Bloodthirsty and Frenzy can stack, giving Advantage 2."
+  },
+  "Gnoll Battle Shaman": {
+    "generous": "Focus the Dread dice on 1 well-armored target.",
+    "deadly": "Whichever dice roll low on Withering Dread, damage unharmed allies. Spread the remaining dice out to make defending unappealing."
+  },
+  "Briarbane Seedling": {
+    "generous": "Attack while heroes are adjacent. Attack Acidpods when they'll damage other Briarbanes.",
+    "deadly": "Target Grappled heroes, or Acidpods that are in a good position to explode and hit multiple enemies."
+  },
+  "Briarbane Acidpod": {
+    "generous": "Grab isolated or well-armored or high DEX heroes.",
+    "deadly": "Grab heroes near their allies then shoot it with Seedlings for a big explosion! Combo with Tanglers to Pull heroes into a clump."
+  },
+  "Briarbane Tangler": {
+    "generous": "Separate them from their allies. They're far less deadly without other creatures taking advantage of their Grapple.",
+    "deadly": "Act first amonsgt monsters to set up advantage on their attacks. Avoid heroes who deal fire or slashing damage."
+  },
+  "Briarbane Rootbreaker": {
+    "generous": "Target Grappled heroes, likely breaking them free.",
+    "deadly": "Angle their attacks to push heroes into each other or toward Acidpods."
+  },
+  "Briarbane Treant": {
+    "generous": "Mostly use Slam, targeting well-armored heroes.",
+    "deadly": "Use Stomp as often as possible, including against heroes Grappled by allies."
+  },
+  "Druid": {
+    "generous": "Use Beastshift to charge into combat aggressively. Keep melee heroes nearby with Hurricane.",
+    "deadly": "Push heroes into obstacles or hazards with Hurricane. Use Beastshift to strike then escape melee."
+  },
+  "Spring Golem": {
+    "generous": "Stay away from Entangled foes, preventing you from using Swiftspear on them if they escape.",
+    "deadly": "Always move toward Entangled foes, so you can use Swiftspear. If you have at least 2 foes Entangled, use Crushing Vines."
+  },
+  "Duskprowler": {
+    "generous": "Stay near heroes that use large damage dice to attack.",
+    "deadly": "Focus on attacking heroes with small damage dice (daggers, unarmed strikes, wind spells)."
+  },
+  "Owlbear": {
+    "generous": "Use Fearsome Hoot after you are bloodied.",
+    "deadly": "Use Fearsome Hoot early, so that Frightened lasts longer."
+  },
+  "Dryad": {
+    "generous": "Stay within your home tree, even after it is attacked.",
+    "deadly": "Immediately teleport to another tree within sight after your bonded tree is attacked. Distract them by attacking from a non-bonded tree."
+  },
+  "Greater Dryad": {
+    "generous": "Stay within your home tree, even after it is attacked.",
+    "deadly": "Immediately teleport to another tree within sight after your bonded tree is attacked. Distract them by attacking from a non-bonded tree."
+  },
+  "Wondrous Dryad": {
+    "generous": "Stay within your home tree, even after it is attacked.",
+    "deadly": "Immediately teleport to another tree within sight after your bonded tree is attacked. Distract them by attacking from a non-bonded tree."
+  },
+  "Snake Swarm Horde": {
+    "generous": "Overlap space with a small number of heroes. Clump together, making AOEs do more damage.",
+    "deadly": "Enter the spaces of as many heroes as possible. Spread out, to put pressure on the whole party and make AOEs less effective."
+  },
+  "Bug": {
+    "generous": "Focus fire on heroes with high armor or near heroes with strong AoE abilities.",
+    "deadly": "Multiple small creatures can fit in a single space. Surrounding a hero with 10–20 minions can get deadly FAST (especially if they have low armor or no AoE abilities)!"
+  },
+  "Giant Bug": {
+    "generous": "Stay in melee reach or clump together with other bugs.",
+    "deadly": "Move out of melee reach after attacking; summon minions in places that block movement and obstruct heroes' plans."
+  },
+  "Toughrider Bug": {
+    "generous": "Focus fire on heroes with high armor or near heroes with strong AoE abilities.",
+    "deadly": "When Riding, attacks that miss you damage the Ridden target! Medium armor means these combo well with the Bonfire Bug's Eruption damage, taking no damage from it."
+  },
+  "Acidshot Bug": {
+    "generous": "Move adjacent to heroes and attack with disadvantage.",
+    "deadly": "Stay at range (e.g., trees, ceiling of a tunnel) shoot, then move further away."
+  },
+  "Jacker Bug": {
+    "generous": "Attack first, allowing heroes to easily Defend. Foreshadow the effects of the Toxin (via an NPC or Naturecraft checks).",
+    "deadly": "Attack with them last, after a hero has already Defended or attack in pairs to get damage through."
+  },
+  "Bonfire Bug": {
+    "generous": "Allow a hero who kills one to knock it in a direction where it will explode and take out other bugs.",
+    "deadly": "Skitter toward heroes who are clumped closely together, or start a chain reaction with other bonfire bugs!"
+  },
+  "Vicejaw Bug": {
+    "generous": "Let go of heroes after 1 round in order to attack another.",
+    "deadly": "Aim for weak backline heroes. Isolate them from their allies (remember: Grappled targets are attacked w/advantage)."
+  },
+  "Thrum Bug": {
+    "generous": "Aim for only 1 or 2 heroes, prioritizing heroes with high WIL saves (Shepherd, Stormshifter, Songweaver, Psion)",
+    "deadly": "Hit as many heroes as possible, prioritizing heroes with poor WIL saves (The Cheat, Shadowmancer, Artificer)."
+  },
+  "Spit Bug": {
+    "generous": "Use Acid Spit when in melee (rolling with disadvantage).",
+    "deadly": "Climb to a high spot (ceiling of a cave or tree branch), Restrain as many heroes as possible to use up their actions and grant your allies advantage."
+  },
+  "Maneater Bug": {
+    "generous": "Quick Strike a hero who already got a low Initiative roll.",
+    "deadly": "Quick Strike 2 different heroes with a higher Initiative to really tilt the odds in your favor."
+  },
+  "Rhino Bug": {
+    "generous": "Target a single hero (and some other bugs) with Charge.",
+    "deadly": "Combo with Vicejaws, Maneaters, and Spitbugs to line up many heroes for a powerful Charge."
+  },
+  "Ballistic Bug": {
+    "generous": "Waste the attack on few heroes or include some allied bugs.",
+    "deadly": "Combo with Grappling bugs to move heroes into the blast zone, making it harder for them to escape while Poisoned!"
+  },
+  "Gray Ooze": {
+    "generous": "Oozes often move very slowly or can easily become distracted by detritus in the dungeon.",
+    "deadly": "Oozes can be particularly nasty when falling from above, against heroes with slashing attacks, pit traps, or slashing traps."
+  },
+  "Elder Ooze": {
+    "generous": "Oozes often move very slowly or can easily become distracted by detritus in the dungeon.",
+    "deadly": "Oozes can be particularly nasty when falling from above, against heroes with slashing attacks, pit traps, or slashing traps."
+  },
+  "Ooze Minion": {
+    "generous": "Oozes often move very slowly or can easily become distracted by detritus in the dungeon.",
+    "deadly": "Oozes can be particularly nasty when falling from above, against heroes with slashing attacks, pit traps, or slashing traps."
+  },
+  "Cockatrice": {
+    "generous": "Attack different heroes, especially ones with high Defense.",
+    "deadly": "Focus a single, low Defense, hero."
+  },
+  "Lithogallus the Impeccable": {
+    "generous": "Use heelspur as much as possible.",
+    "deadly": "Use Stony Peck as much as possible."
+  },
+  "Carrion Worm": {
+    "generous": "Stay at range.",
+    "deadly": "Engage in melee to hit multiple heroes with your aura."
+  },
+  "Stirge": {
+    "generous": "Delatch after a round or two.",
+    "deadly": "Attack heroes with high Defense, combos well with creatures who Poison, Blind, or otherwise give additional Disadvantage."
+  },
+  "Greater Stirge": {
+    "generous": "Delatch after a round or two.",
+    "deadly": "Attack heroes with high Defense, combos well with creatures who Poison, Blind, or otherwise give additional Disadvantage."
+  },
+  "Mummy": {
+    "generous": "Target high-defense or already Dazed heroes. If guarding a tomb, it will not pursue the heroes if they escape.",
+    "deadly": "Target Grappled heroes and ones not already Dazed."
+  },
+  "Mummy Lord": {
+    "generous": "Your Scarab Swarms act next round, and attack heroes you aren't attacking.",
+    "deadly": "Your Scarab Swarms act immediately upon being summoned, focus Slam on Grappled heroes."
+  },
+  "Snakeman Minion": {
+    "deadly": "Unique for minions, Snakemen can strike from a distance, us it to your advantage to stay away from danger!"
+  },
+  "Shadow Dragon": {
+    "generous": "Leave your Umbral Minions near heroes who are dying or low on actions. When summoned, make them wait until the end of the round to act.",
+    "deadly": "Protect your Umbral Minions preciously. Make the heroes work to regain their actions back!"
+  },
+  "Lizardfolk Reedstalker": {
+    "generous": "Attack already Poisoned heroes, act after Scalebreakers",
+    "deadly": "Attacks from Invisible can't be Defended or Interposed!"
+  },
+  "Lizardfolk Scalebreaker": {
+    "generous": "Act first and target non-Hampered heroes",
+    "deadly": "Act last and prioritize Hampered heroes."
+  },
+  "Lizardfolk Hunter": {
+    "generous": "\"Forget\" to use your net; attack from up close.",
+    "deadly": "Net is wet/reinforced (unaffected by fire/slashing damage). Use Muck to get at maximum Range before attacking."
+  },
+  "Lizardfolk Broodguard": {
+    "generous": "Interpose against crits or other attacks good VS heavy armor. Hold position near other lizardfolk and forego attacking.",
+    "deadly": "Protect high-damage allies like Hunters. Interpose against attacks that are less effective against Heavy armor."
+  },
+  "Lizardfolk Shaman": {
+    "generous": "Warn that the shaman isn't being protected. \"It's almost as if she wants to sacrifice herself.\"",
+    "deadly": "Charge forward, egg the heroes into attacking the shaman."
+  },
+  "Lizardfolk Greatscale": {
+    "generous": "Tailswipe a small number of heroes. Crush a non-Prone target.",
+    "deadly": "Act last, combo with Scalebreaker and Raptor for big damage."
+  },
+  "Swamp Raptor": {
+    "generous": "Spread the Raptors and allies out, attacking different targets.",
+    "deadly": "Use their speed to attack isolated heroes in packs. They'll gain advantage from Pack Tactics, Prone, AND Restrained!"
+  },
+  "Hydra": {
+    "generous": "Spread the attacks out, or attack a Dying hero with all heads, it only counts as a single attack and is not likely to crit!",
+    "deadly": "Attack a single hero for devastating damage!"
+  },
+  "Bogleech": {
+    "generous": "Leap from the water, revealing yourself, and chase targets onto dry land.",
+    "deadly": "Remain hidden underwater until a hero is distracted or weakened."
+  },
+  "Diretoad": {
+    "generous": "Gorge yourself! Fill up with heroes hitting for 2x damage.",
+    "deadly": "Attack from max reach, and hop away with your prize!"
+  },
+  "Crabman": {
+    "generous": "Start a conversation! Crabmen will believe almost anything they are told. Give the heroes an opening to trick the Crabmen into a truce or surrender.",
+    "deadly": "Focus weaker targets with the Crabman's friends while melee fighters are grappled."
+  },
+  "Crabman Brute": {
+    "generous": "Start an argument about which Crabman is strongest! Alternatively, push a grappled hero out of a Crabman's grasp.",
+    "deadly": "Push heroes into deep water, sharp stones, or other hazards."
+  },
+  "Huskwalker": {
+    "generous": "Attack any target that is closest. Move on to other targets after knocking Prone, or wander aimlessly is a undead haze.",
+    "deadly": "Crabmen can dog-pile a hero knocked prone by a Huskwalker, keeping them pinned with Grapple."
+  },
+  "Croakoa Darter": {
+    "deadly": "Excellent when combined with Writhing Baloons"
+  },
+  "Croakoa Brute": {
+    "generous": "Instead of using Squish, Leap Squash from hero to hero.",
+    "deadly": "Target Weak heroes to Leap Squash then Squish."
+  },
+  "Croakoa Hunter": {
+    "deadly": "Jump away with Swallowed heroes, near allies or tadpoles."
+  },
+  "Croakoa Royal Defender": {
+    "generous": "Use Protect the Brood minimally.",
+    "deadly": "If undamaged this round, use Darters to make you deal additional damage."
+  },
+  "Croakoa Brood Queen": {
+    "generous": "Telegraph that she BADLY wants to get next to a hero to roll over them.",
+    "deadly": "Use Poisonous Spit to encourage heroes to approach, then use Crushing Roll to restrain."
+  },
+  "Wyvern": {
+    "deadly": "Spread the Poison out, use claws to bait out Defend, then use stinger!"
+  },
+  "Harpy Matriarch": {
+    "generous": "Harpies need to have heroes separated enough to attack effectively.",
+    "deadly": "Lure heroes off a cliff >:D"
+  },
+  "Storm Giant": {
+    "generous": "Storm Giants may not deal lethal Wounds to an honorable heroes who yield to them as supreme.",
+    "deadly": "Thunder Stride whenever you can damage 3 or more heroes with it to make them split up. Use Lightning Spear on low HP heroes since it will still deal some damage even if Interposed."
+  },
+  "Sage (Priest)": {
+    "generous": "Go last in a round, so heroes can take out the blessed ally before they can attack.",
+    "deadly": "Go first in a round, bless lower HP allies."
+  },
+  "Knight": {
+    "generous": "Interpose for lower damage allies, especially vs crits that ignore your heavy armor.",
+    "deadly": "Interpose for stronger allies, especially vs attacks with modifiers that your Heavy armor can easily mitigate."
+  },
+  "Knight Dragoon": {
+    "generous": "Stay close to heroes so that Lance has a lesser effect.",
+    "deadly": "Hit and run. Charge in to attack then move away to build up another big Lance attack."
+  },
+  "Doppelganger": {
+    "generous": "Use Shapeshifter only on weak attacks, or not at all.",
+    "deadly": "Hold Shapeshifter and make heroes wary to attack—save it for a big hit and swap with a flimsy hero."
+  },
+  "Spy": {
+    "generous": "Fight only long enough to flee! Spies don't want to kill, they want to escape notice.",
+    "deadly": "Poison as many targets as you can, keep out of the melee."
+  },
+  "Assassin": {
+    "generous": "Spread around your initial attack, and withdraw if ambushing doesn't kill your targets.",
+    "deadly": "Take out a healer or other weak target down in your first strike. Bunch up to auto-crit on Distracted targets."
+  },
+  "Roaring Blaze": {
+    "deadly": "Weaker elementals attack first to set up Searing Strikes for stronger elementals. Weaker ones can attack allied elementals to boost their power for a turn."
+  },
+  "Raging Inferno": {
+    "generous": "Stronger elementals attack first, wasting powerful Searing Strikes.",
+    "deadly": "Weaker elementals attack first to set up Searing Strikes for stronger elementals. Weaker ones can attack allied elementals to boost their power for a turn."
+  },
+  "Firelord Blackflame": {
+    "generous": "Minimize the heroes in your Incinerate cone. Have his summoned creatures attacks creatures not yet damaged by fire. Keep him safely away from heroes, use his summons to protect him.",
+    "deadly": "Incinerate all heroes once each round, and rely on the summons to deal most of the damage. Let him soak up damage so he can summon more enemies too soon. Include fire elementals in the Incinerate to boost their damage."
+  },
+  "Brimstone Blasthand": {
+    "generous": "Start combat needing to reload",
+    "deadly": "start combat loaded and ready to Fire!"
+  },
+  "Brimstone Whipmaster": {
+    "generous": "Use Obey! on allies that are already low on HP.",
+    "deadly": "Move the heroes into clumps to set up big AoE attacks from Blasthands. And whip Blasthands to make them reload faster."
+  },
+  "Brimstone Scorchsmith": {
+    "generous": "Place allies adjacent to be damaged by Flame Forged.",
+    "deadly": "Combine with a Blackguard to protect allies from their damage. Whip them for tremendous fire damage when surrounded by heroes."
+  },
+  "Cinderbelcher": {
+    "generous": "The fire elemental trapped within sees the heroes as its ally against the Dwarves.",
+    "deadly": "The fire elemental attacks the heroes."
+  },
+  "Iron Goat": {
+    "generous": "Knock heroes straight back and chase them down.",
+    "deadly": "Knock heroes off cliffs or into rocks for extra forced movement damage. Make them climb back up to reach you, then do it again!"
+  },
+  "Young Remorhaz": {
+    "generous": "Focus on grappling, only Swallow when nearing death.",
+    "deadly": "Move often to apply Living Blast Furnace to all heroes each round. Swallow creatures who can easily ignore your armor anyway."
+  },
+  "Abominable Yeti": {
+    "generous": "Use Dreadful Eye against close-range targets.",
+    "deadly": "Lock back heroes with big melee dice using Dreadful Eye. Punish Cheats and other crit-fishing heroes with Limb from Limb."
+  },
+  "Hookspawn": {
+    "generous": "Target Ranged heroes who have little need to move.",
+    "deadly": "Lacerate as many heroes as possible. Combine with Glabrezu, Hezrou, or Incubus/Succubus to force movement."
+  },
+  "Incubus/Succubus": {
+    "generous": "Target strong-willed heroes (Shepherd & Songweaver)",
+    "deadly": "Target weak-willed heroes (The Cheat & Shadowmancer)"
+  },
+  "Vrock": {
+    "generous": "Keep it near strong melee heroes (Berserker, Commander, Oathsworn) so the save is much easier to overcome.",
+    "deadly": "Keep it in the air out of melee reach, target weaker heroes (Mage, Songweaver, Stormshifter)."
+  },
+  "Hezrou": {
+    "generous": "Move twice instead of one of your attacks. Target high-STR/DEX classes to be consumed.",
+    "deadly": "Target classes that buff their allies (e.g., Commander, Songweaver) to limit their special abilities."
+  },
+  "Glabrezu": {
+    "generous": "Target two different heroes with Doomclaw.",
+    "deadly": "Target a single weak/slow hero with both Doomclaws."
+  },
+  "Nalfeshnee": {
+    "generous": "Cast copies of weaker spells, stay near melee heroes.",
+    "deadly": "Use your mobility to stay far away from heroes."
+  },
+  "Hierarch": {
+    "generous": "Act last amongst monsters or Offer Absolution to those not at risk of being attacked.",
+    "deadly": "Act first and Offer Absolution to those at greatest risk of being attacked."
+  },
+  "Overlord": {
+    "generous": "Have all minions Offer to Taunt a single nearby enemy who can easily dispatch them with an AoE.",
+    "deadly": "Each minion Offers to Taunt a different enemy, continue to target any Hero who rejects. Extra challenging when combined with the Lumbrax, Pactmonger, or Hierarch."
+  },
+  "Executor": {
+    "generous": "Allow the heroes to creatively coordinate their choices in secret (e.g., telepathy or stealth check).",
+    "deadly": "If the Executor notices coordination, heroes may forfeit their choice and you choose for them this round instead."
+  },
+  "Quasit": {
+    "generous": "When damaged, it can make its Offer, if accepted it can flee combat in a puff of sulfuric smoke.",
+    "deadly": "Tempt multiple heroes with smaller weapons to make Opportunity Attacks by moving past them or moving away after attacking. It can OFFER more riches, but they only carry enough gp to fulfil the offer once—\"I'll owe you! hehehehe…\""
+  },
+  "Grumbulus": {
+    "generous": "Make your Offer more often (e.g., when you take damage), or select a powerful Fiend instead of choosing randomly.",
+    "deadly": "Use these with other powerful Fiends to really tempt Heroes into taking the offer—or with ones that summon weak minions like the Lumbrax to increase the chances of the heroes getting a bad deal!"
+  },
+  "Pactmonger": {
+    "generous": "Choose strong heroes, ones that can easily be protected, or ones that have already accepted an offer.",
+    "deadly": "Act last amongst monsters. Choose heroes with very low HP, they'll lose the action anyway when they drop to 0!"
+  },
+  "Lumbrax": {
+    "generous": "Swarm your minions around Heroes who can easily deal AoE damage. The minions are lazy and attack next round.",
+    "deadly": "Threaten weakened heroes with BIG damage (feel free to let them know you'll be rolling d20s!) so you can summon LOTS of minions (who attack right away). Works great with the Grumbulus."
+  },
+  "Justiciar": {
+    "generous": "Limit the need to Interpose by spreading damage out and attacking more well-armored heroes.",
+    "deadly": "Focus-fire weak heroes, force their allies to Interpose. Tempt them into making Opportunity Attacks against weak enemies. Use Cruel Judgment to to set up devastating Offerings for the Hierarch, Lashfiend, or Pactmonger."
+  },
+  "Lashfiend": {
+    "generous": "Target strong heroes (Berserker, Commander, Oathsworn)",
+    "deadly": "Target weak heroes (Mage, Songweaver, Stormshifer)"
+  },
+  "Cloud Giant": {
+    "generous": "Move an ally that has already attacked, or a ranged hero. Wait to attack with cyclone minions until the next round.",
+    "deadly": "Throw heroes out a window, off a ledge, or into range for a big AoE with Pawn in My Domain. Or boost an ally, moving them into a critical backline position for a powerful attack."
+  },
+  "Naga Skeleton": {
+    "generous": "Remind heroes that they can choose to fail a save!"
+  },
+  "Naga Warden": {
+    "generous": "Prioritize heroes who go later in the round or allow heroes to take their turns in a different order.",
+    "deadly": "Prioritize heroes that go earlier in the round. Charm melee heroes to make them spend actions moving back into reach with you."
+  },
+  "Wererat": {
+    "generous": "Avoid using Bite. Instead, turn your focus to the heroes still standing. Skitter to areas within Range of heroes.",
+    "deadly": "Focus on weak heroes and use Bite at every opportunity. Skitter to block movement of enemies."
+  },
+  "Werewolf": {
+    "generous": "Use the Knockback of Maul to turn off the Werewolves' Pack Hunter ability. Maul 2 different targets rather than attacking a Prone one.",
+    "deadly": "Knock heroes into their own allies, or knockback to increase Wereboar's Charge damage or adjacent to allied Werewolves, giving them Advantage 2 (Prone + Pack Hunter)."
+  },
+  "Wereboar": {
+    "generous": "Attack the nearest creatures, limiting Charge damage.",
+    "deadly": "Maximize your use of Charge"
+  },
+  "Werebear": {
+    "generous": "Use the Knockback of Maul to turn off the Werewolves' Pack Hunter ability. Maul 2 different targets rather than attacking a Prone one.",
+    "deadly": "Knock heroes into their own allies, or knockback to increase Wereboar's Charge damage or adjacent to allied Werewolves, giving them Advantage 2 (Prone + Pack Hunter)."
+  },
+  "Nightmare": {
+    "generous": "Charge through your enemies, ending with them outside your aura.",
+    "deadly": "Have a rider engage from atop the Nightmare. Vampires or Fiends make for a good combination."
+  },
+  "Flesh Golem": {
+    "generous": "Telegraph your slow speed, allow enemies to kite you.",
+    "deadly": "Pretend to be a dead body, surprising enemies that draw near. Engage in an enclosed space, or with Grappling allies (e.g., an animated rug)."
+  },
+  "Autumn Golem": {
+    "generous": "Aim scythe attacks to hit only 1 or 2 targets.",
+    "deadly": "Have an ally or minion intentionally set the Golem ablaze."
+  },
+  "Drow Scout": {
+    "generous": "Stay near melee heroes to be easily dispatched.",
+    "deadly": "Shoot from max Range. Spread out Poison then focus fire."
+  },
+  "Drow Warrior": {
+    "generous": "Use the Poisoned Crossbow for less damage output",
+    "deadly": "Use Blade Flurry VS Hampered targets for tremendous damage output!"
+  },
+  "Drow Arachnomancer": {
+    "generous": "Move out into the open and use Fanglash on already Poisoned Heroes. Allow Web Wall to disappear when bloodied, crit or at will.",
+    "deadly": "Use Web Wall to split up the party of heroes, and target low HP heroes with Pyrotoxin at max Range."
+  },
+  "Drow Elite Warrior": {
+    "generous": "Act first and target non-Hampered heroes",
+    "deadly": "Act last and prioritize Hampered heroes."
+  },
+  "Drider": {
+    "generous": "Knock creatures Prone before attacking with Ranged Drow.",
+    "deadly": "Follow up Drider attacks with Warrior's Blade Flurry."
+  },
+  "Drow Priestess": {
+    "generous": "Avoid movement, move minions in groups, toward heroes that have AoE abilities that can easily take them out. Minions act next round.",
+    "deadly": "Minions act immediately, spread them out so that multiple are not easily taken out with single attacks."
+  },
+  "Fungusfolk Sentinel": {
+    "generous": "Don't retreat. Target heroes adjacent to you and don't spend their action moving.",
+    "deadly": "Continually withdraw to advantageous terrain. Force heroes to take damage pursuing."
+  },
+  "Fungusfolk Psychotrope": {
+    "generous": "Move heroes randomly or safely while Hallucinating.",
+    "deadly": "Stay close to Sentinels, make heroes retreat out of their reach while Hallucinating, or into other hazards."
+  },
+  "Fungusfolk Sovereign": {
+    "generous": "Command a Sentinal to wast its Daze on an already Dazed hero, make a hero without any actions hallucinate.",
+    "deadly": "Stay out of reach and command from cover or even a completely different cave system!"
+  },
+  "Grick": {
+    "generous": "Grasp martial heroes with tentacles—but save the beak only for those that can take it.",
+    "deadly": "Swarm targets with Wormlets to set up powerful beak attacks for their bigger kin. Wormlets may be easy to escape, but it still takes an action!"
+  },
+  "Grick Alpha": {
+    "generous": "Grasp martial heroes with tentacles—but save the beak only for those that can take it.",
+    "deadly": "Swarm targets with Wormlets to set up powerful beak attacks for their bigger kin. Wormlets may be easy to escape, but it still takes an action!"
+  },
+  "Grick Wormlet": {
+    "generous": "Grasp martial heroes with tentacles—but save the beak only for those that can take it.",
+    "deadly": "Swarm targets with Wormlets to set up powerful beak attacks for their bigger kin. Wormlets may be easy to escape, but it still takes an action!"
+  },
+  "Umber Hulk": {
+    "generous": "Use Confusion to move heroes around, rather than attack.",
+    "deadly": "Bait heroes around corners and into tight corridors, where they can't escape your pheromones. Pit confused heroes against each other, or make them Interpose for you."
+  },
+  "Deep Giants": {
+    "generous": "Club carelessly, hitting allies. Dramatically curse heroes that damage you, even at close range.",
+    "deadly": "Curse heroes using cover, or ones that are often buffed or in need of aid. Use chokepoints to funnel heroes into one big Club Sweep. Knock heroes back into tight clumps for better follow up attacks."
+  },
+  "Cloaker": {
+    "generous": "Release targets in surprise when hit.",
+    "deadly": "If your Grapple target breaks free, fly out of reach and Wail. Then, Wrap a distant target."
+  },
+  "Great Worm": {
+    "generous": "Gorge yourself! Once most heroes are swallowed, your HP will melt away.",
+    "deadly": "Swallow only targets that can easily bypass your armor anyway, then use Crush to slow down their friends' actions."
+  },
+  "Troglodyte Muckthrower": {
+    "deadly": "Further debilitate foes, adding the Blinded condition gives the Trogs an additional instance of advantage against the Heroes."
+  },
+  "Troglodyte Screecher": {
+    "deadly": "Greatly increase the survivability of the Trogs, and if positioned well can output as much damage as Champions. There is no need to have Screechers in an encounter that also has a Swollen One, their effects are redundant and can't be combined."
+  },
+  "Troglodyte Champion": {
+    "deadly": "The only armored Troglodyte! Use them at higher levels to increase the challenge level without too greatly multiplying the number of monsters. Remember to keep the ratio of monsters to heroes no higher than 4 to 1 (minions excluded) for typical encounters."
+  },
+  "Troglodyte Swollen One": {
+    "deadly": "These should act first, to help position Trogs deeper into the heroes' back lines, as well as to reduce the actions the heroes can take and their effectiveness by Dazing and Poisoning them. Trogs should mercilessly attack any who approach their revered Swollen Ones."
+  },
+  "Zombie": {
+    "generous": "Take the most direct line to target, regardless of danger.",
+    "deadly": "Act first to Grapple and setup strong attacks from allies."
+  },
+  "Ghoul": {
+    "generous": "Act first, targeting already Dazed heroes or ones who have not yet Defended this round.",
+    "deadly": "Act last, targeting heroes who are Grappled, Prone, or not already Dazed."
+  },
+  "Ogre Zombie": {
+    "generous": "Act last so other monsters can't take advantage of heroes being knocked Prone.",
+    "deadly": "Attack Grappled heroes."
+  },
+  "Giant Zombie": {
+    "generous": "Target ranged heroes in the open to minimize the negative effects of Knockback.",
+    "deadly": "Target melee heroes near walls or their allies."
+  },
+  "Flaming Skull": {
+    "generous": "Center Fireblast on yourself! Don't move while laughing.",
+    "deadly": "Keep your distance, or distract with minions while you charge yourself."
+  },
+  "Specter": {
+    "generous": "Attack only heroes who haven't yet Defend this round.",
+    "deadly": "Stay in the air, out of melee reach. Target heroes who have already defended—multiple Specters gets deadly, fast!"
+  },
+  "Ghost": {
+    "generous": "Move the possessed hero, or make basic attacks. Allow the party to RP with you, and be convinced to act on their behalf.",
+    "deadly": "Use reactions so the possessed hero can't. Interpose for monsters, negating an ally's attack."
+  },
+  "Wraith": {
+    "generous": "Attack unwounded heroes who have not yet defended.",
+    "deadly": "Focus on heroes who area already Dying, or isolated ones with no allies to Interpose for them."
+  },
+  "Banshee": {
+    "generous": "Wail from afar, before moving in. Give the heroes time to stabilize.",
+    "deadly": "Frighten and avoid melee heroes. Wail in the middle of the heroes, then immediately follow up on anyone who fails."
+  },
+  "Death Knight": {
+    "generous": "Use Gravewalk for simple mobility during your turn, or get closer to back rank Ranged or undamaged heroes. Move out of Interpose Range of your Squires.",
+    "deadly": "Save Gravewalk for when you are attacked or when a hero is being healed outside of your Aura's radius to stifle the healing and deal damage instead. That'll make the heroes respect you!"
+  },
+  "Death Knight Marshal": {
+    "generous": "Use Gravewalk for simple mobility during your turn, or get closer to back rank Ranged or undamaged heroes. Move out of Interpose Range of your Squires.",
+    "deadly": "Save Gravewalk for when you are attacked or when a hero is being healed outside of your Aura's radius to stifle the healing and deal damage instead. That'll make the heroes respect you!"
+  },
+  "Death Knight Baron": {
+    "generous": "Use Gravewalk for simple mobility during your turn, or get closer to back rank Ranged or undamaged heroes. Move out of Interpose Range of your Squires.",
+    "deadly": "Save Gravewalk for when you are attacked or when a hero is being healed outside of your Aura's radius to stifle the healing and deal damage instead. That'll make the heroes respect you!"
+  },
+  "Death Knight Regent": {
+    "generous": "Use Gravewalk for simple mobility during your turn, or get closer to back rank Ranged or undamaged heroes. Move out of Interpose Range of your Squires.",
+    "deadly": "Save Gravewalk for when you are attacked or when a hero is being healed outside of your Aura's radius to stifle the healing and deal damage instead. That'll make the heroes respect you!"
+  },
+  "Grave Crow": {
+    "generous": "Clump up and attack heavily armored or high-health heroes that can easily shrug off their meager damage.",
+    "deadly": "Spread out and attack Dying heroes to inflict Wounds more quickly."
+  },
+  "Grave Squire": {
+    "generous": "Clump up, and Interpose against small attacks, or push Knights into disadvantageous positions when Interposing.",
+    "deadly": "Spread out to avoid AoE damage, Interpose only against attacks that would bypass a Knight's Armor or other above average attacks."
+  },
+  "Hollow Knight": {
+    "generous": "Focus on front line heroes who don't rely on crits or additional modifies for their damage.",
+    "deadly": "Use your speed to focus on back line heroes and classes that need crits or modifiers to deal extra damage."
+  },
+  "Psionic Scourge": {
+    "generous": "Engage heroes 1-on-1 using Psi Blast, use Seed Though to move heroes randomly.",
+    "deadly": "Gang up with allies, Grapple the heroes they leave Dazed!"
+  },
+  "Cerebral Hulks": {
+    "generous": "Refrain from moving your Grappled target.",
+    "deadly": "Immediately retreat with a Grappled creature to a Psionic Scourge or Despot for the finishing blow."
+  },
+  "Psionic Despot": {
+    "generous": "Take a break on the back lines - issue psychic commands to your forces, and psychic taunts to the heroes.",
+    "deadly": "Have allies isolate a hero with Seed Thought or Bring to Master, then, Consume!"
+  },
+  "Gibbering Mouther": {
+    "generous": "Choose another enemy to be struck, or choose randomly.",
+    "deadly": "Force heroes to attack allies or self when confused."
+  }
+}

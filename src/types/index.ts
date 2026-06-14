@@ -227,6 +227,10 @@ export interface Monster {
   abilities: MonsterAbility[];
   isCustom: boolean;
   description: string;
+  /** GM tip for playing the monster generously (the 🕊️ "dove" tip): easier on players. */
+  tipGenerous?: string;
+  /** GM tip for playing the monster deadlier (the 💀 "skull" tip): harder on players. */
+  tipDeadly?: string;
   imageId?: string;
   imageDataUri?: string;
   createdAt: string;

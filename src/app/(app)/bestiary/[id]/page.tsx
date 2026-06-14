@@ -24,7 +24,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { ImagePlus, Trash2 } from 'lucide-react';
+import { ImagePlus, Trash2, Bird, Skull } from 'lucide-react';
 import type { MonsterAbility, MonsterSize, ArmorType } from '@/types';
 
 const ACTION_TYPES = [
@@ -74,6 +74,8 @@ export default function MonsterDetailPage() {
   const [editSaveDC, setEditSaveDC] = useState<number | undefined>(undefined);
   const [editSpecialMovement, setEditSpecialMovement] = useState('');
   const [editAbilities, setEditAbilities] = useState<MonsterAbility[]>([]);
+  const [editTipGenerous, setEditTipGenerous] = useState('');
+  const [editTipDeadly, setEditTipDeadly] = useState('');
   const [editImageDataUri, setEditImageDataUri] = useState<string | undefined>(undefined);
 
   function startEditing() {
@@ -88,6 +90,8 @@ export default function MonsterDetailPage() {
     setEditSaveDC(monster.saveDC);
     setEditSpecialMovement(monster.specialMovement ?? '');
     setEditAbilities([...monster.abilities]);
+    setEditTipGenerous(monster.tipGenerous ?? '');
+    setEditTipDeadly(monster.tipDeadly ?? '');
     setEditImageDataUri(monster.imageDataUri);
     setEditing(true);
   }
@@ -132,6 +136,8 @@ export default function MonsterDetailPage() {
       saveDC: editSaveDC,
       specialMovement: editSpecialMovement.trim() || undefined,
       abilities: editAbilities.filter((a) => a.name.trim()),
+      tipGenerous: editTipGenerous.trim() || undefined,
+      tipDeadly: editTipDeadly.trim() || undefined,
       imageDataUri: editImageDataUri,
     });
     setEditing(false);
@@ -423,6 +429,40 @@ export default function MonsterDetailPage() {
             </CardContent>
           </Card>
 
+          <Card>
+            <CardHeader>
+              <CardTitle>GM Tips</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-tip-generous" className="flex items-center gap-1.5">
+                  <Bird className="size-4 text-emerald-500" />
+                  Generous (play it kind)
+                </Label>
+                <Textarea
+                  id="edit-tip-generous"
+                  value={editTipGenerous}
+                  onChange={(e) => setEditTipGenerous(e.target.value)}
+                  placeholder="How to play this monster to go easier on the party..."
+                  rows={2}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-tip-deadly" className="flex items-center gap-1.5">
+                  <Skull className="size-4 text-destructive" />
+                  Deadly (play it hard)
+                </Label>
+                <Textarea
+                  id="edit-tip-deadly"
+                  value={editTipDeadly}
+                  onChange={(e) => setEditTipDeadly(e.target.value)}
+                  placeholder="How to play this monster to challenge the party..."
+                  rows={2}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
           <div className="flex justify-end gap-3">
             <Button variant="outline" onClick={() => setEditing(false)}>
               Cancel
@@ -553,6 +593,40 @@ export default function MonsterDetailPage() {
                     Description
                   </h3>
                   <p className="text-sm leading-relaxed">{monster.description}</p>
+                </div>
+              </>
+            )}
+
+            {/* GM Tips */}
+            {(monster.tipGenerous || monster.tipDeadly) && (
+              <>
+                <Separator />
+                <div className="space-y-3">
+                  <h3 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground">
+                    GM Tips
+                  </h3>
+                  {monster.tipGenerous && (
+                    <div className="flex gap-3 rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3">
+                      <Bird className="size-5 shrink-0 text-emerald-500" />
+                      <div>
+                        <div className="text-xs font-semibold uppercase tracking-wider text-emerald-500/90">
+                          Generous
+                        </div>
+                        <p className="text-sm leading-relaxed">{monster.tipGenerous}</p>
+                      </div>
+                    </div>
+                  )}
+                  {monster.tipDeadly && (
+                    <div className="flex gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-3">
+                      <Skull className="size-5 shrink-0 text-destructive" />
+                      <div>
+                        <div className="text-xs font-semibold uppercase tracking-wider text-destructive/90">
+                          Deadly
+                        </div>
+                        <p className="text-sm leading-relaxed">{monster.tipDeadly}</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </>
             )}
