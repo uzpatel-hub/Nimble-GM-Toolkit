@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "predev": "node scripts/free-port.mjs 3001",
     "dev": "next dev --port 3001",
+    "dev:clean": "node scripts/free-port.mjs 3001 && node scripts/clean-next.mjs && next dev --port 3001",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
