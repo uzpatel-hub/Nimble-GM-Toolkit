@@ -38,15 +38,20 @@ export async function buildSharePayload({
   npcs,
   images,
   maps,
+  selectedImageIds,
 }: {
   campaignName: string;
   partyMembers: PartyMember[];
   npcs: NPC[];
   images: StoredImage[];
   maps?: GameMap[];
+  /** Image IDs explicitly chosen for export (e.g. by category), included
+   *  in addition to images referenced by NPCs/maps/party members. */
+  selectedImageIds?: string[];
 }): Promise<SharePayload> {
-  // Collect image IDs referenced by NPCs and maps
-  const referencedImageIds = new Set<string>();
+  // Seed with explicitly-selected images, then add anything referenced
+  // by NPCs, maps, and party members so attached art always travels.
+  const referencedImageIds = new Set<string>(selectedImageIds ?? []);
   for (const n of npcs) {
     if (n.imageId) referencedImageIds.add(n.imageId);
   }

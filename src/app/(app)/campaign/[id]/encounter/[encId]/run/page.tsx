@@ -22,13 +22,23 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-import { CONDITIONS as RULES_CONDITIONS } from "@/data/rules";
+import { CONDITIONS as RULES_CONDITIONS, AFFLICTIONS as RULES_AFFLICTIONS } from "@/data/rules";
 import type { Monster, MonsterAbility, TrackedEntity as PersistedEntity } from "@/types";
 
-/** Map condition name → description for quick lookup */
+/** Map condition/affliction name → description for quick lookup */
 const CONDITION_DESCRIPTIONS: Record<string, string> = Object.fromEntries(
-  RULES_CONDITIONS.map((c) => [c.name, c.description])
+  [...RULES_CONDITIONS, ...RULES_AFFLICTIONS].map((c) => [c.name, c.description])
 );
+
+/** Set of names that are Hexbinder Afflictions (for distinct styling) */
+const AFFLICTION_NAMES = new Set(RULES_AFFLICTIONS.map((a) => a.name));
+
+/** Inline badge styling — afflictions render violet, conditions render red */
+function statusBadgeClass(name: string) {
+  return AFFLICTION_NAMES.has(name)
+    ? "text-[10px] bg-violet-900/50 text-violet-300 rounded px-1 shrink-0 hover:bg-violet-700/60 hover:line-through transition-colors"
+    : "text-[10px] bg-red-900/50 text-red-300 rounded px-1 shrink-0 hover:bg-red-700/60 hover:line-through transition-colors";
+}
 
 /** Runtime entity — enriched with the full Monster object for display */
 interface RuntimeEntity extends PersistedEntity {
@@ -43,6 +53,7 @@ const ARMOR_DESC: Record<string, string> = {
 };
 
 const CONDITIONS = RULES_CONDITIONS.map((c) => c.name);
+const AFFLICTIONS = RULES_AFFLICTIONS.map((a) => a.name);
 
 const MAX_UNDO_HISTORY = 50;
 
@@ -419,7 +430,7 @@ export default function RunEncounterPage() {
                           {player.conditions.map((c) => (
                             <button
                               key={c}
-                              className="text-[10px] bg-red-900/50 text-red-300 rounded px-1 shrink-0 hover:bg-red-700/60 hover:line-through transition-colors"
+                              className={statusBadgeClass(c)}
                               title={`${c} — click to remove`}
                               onClick={(e) => { e.stopPropagation(); toggleCondition(player.instanceId, c); }}
                             >
@@ -480,7 +491,7 @@ export default function RunEncounterPage() {
                         {inst.conditions.map((c) => (
                           <button
                             key={c}
-                            className="text-[10px] bg-red-900/50 text-red-300 rounded px-1 shrink-0 hover:bg-red-700/60 hover:line-through transition-colors"
+                            className={statusBadgeClass(c)}
                             title={`${c} — click to remove`}
                             onClick={(e) => { e.stopPropagation(); toggleCondition(inst.instanceId, c); }}
                           >
@@ -727,7 +738,7 @@ function ConditionsPanel({
         {kind === "player" && <Badge variant="outline" className="text-[10px]">Player</Badge>}
       </p>
 
-      {/* Toggle buttons */}
+      {/* Condition toggle buttons */}
       <div className="flex flex-wrap gap-1.5">
         {CONDITIONS.map((c) => {
           const isActive = activeConditions.includes(c);
@@ -745,19 +756,56 @@ function ConditionsPanel({
         })}
       </div>
 
-      {/* Active condition descriptions — only show what's toggled on */}
+      {/* Hexbinder Afflictions */}
+      <Separator />
+      <p className="text-xs font-semibold text-violet-400 flex items-center gap-2">
+        Afflictions
+        <span className="text-[10px] font-normal text-muted-foreground">Hexbinder</span>
+      </p>
+      <div className="flex flex-wrap gap-1.5">
+        {AFFLICTIONS.map((a) => {
+          const isActive = activeConditions.includes(a);
+          return (
+            <Button
+              key={a}
+              variant="outline"
+              size="sm"
+              className={`h-7 text-xs ${
+                isActive
+                  ? "bg-violet-600 text-white border-violet-500 hover:bg-violet-500 hover:text-white"
+                  : "border-violet-500/40 text-violet-300 hover:bg-violet-950/40 hover:text-violet-200"
+              }`}
+              onClick={() => onToggle(instanceId, a)}
+            >
+              {a}
+            </Button>
+          );
+        })}
+      </div>
+
+      {/* Active condition/affliction descriptions — only show what's toggled on */}
       {activeConditions.length > 0 && (
         <>
           <Separator />
           <div className="space-y-1.5">
-            {activeConditions.map((c) => (
-              <div key={c} className="rounded border border-primary/30 bg-primary/5 px-3 py-2">
-                <span className="text-xs font-semibold text-primary">{c}</span>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {CONDITION_DESCRIPTIONS[c]}
-                </p>
-              </div>
-            ))}
+            {activeConditions.map((c) => {
+              const isAffliction = AFFLICTION_NAMES.has(c);
+              return (
+                <div
+                  key={c}
+                  className={`rounded border px-3 py-2 ${
+                    isAffliction ? "border-violet-500/40 bg-violet-500/5" : "border-primary/30 bg-primary/5"
+                  }`}
+                >
+                  <span className={`text-xs font-semibold ${isAffliction ? "text-violet-400" : "text-primary"}`}>
+                    {c}
+                  </span>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {CONDITION_DESCRIPTIONS[c]}
+                  </p>
+                </div>
+              );
+            })}
           </div>
         </>
       )}

@@ -1,5 +1,6 @@
 import { AuthGuard } from "@/components/providers/AuthGuard";
 import { AppSidebar } from "@/components/layout/AppSidebar";
+import { PresentIndicator } from "@/components/layout/PresentIndicator";
 
 export default function AppLayout({
   children,
@@ -13,6 +14,7 @@ export default function AppLayout({
         <main className="flex-1 overflow-y-auto flex flex-col">
           {children}
         </main>
+        <PresentIndicator />
       </div>
     </AuthGuard>
   );

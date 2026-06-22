@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { useImageStore } from "@/stores/image-store";
 import { useMapStore } from "@/stores/map-store";
 import { useImageData } from "@/hooks/use-image-data";
+import { PRESENT_CHANNEL } from "@/lib/present-window";
 import type { PinType, MapPin } from "@/types";
 
 const PIN_COLORS: Record<PinType, string> = {
@@ -48,6 +49,31 @@ function PresentContent() {
     window.addEventListener("resize", updateRect);
     return () => window.removeEventListener("resize", updateRect);
   }, [src]);
+
+  // Broadcast what players are seeing so the GM app can mirror it.
+  useEffect(() => {
+    if (typeof BroadcastChannel === "undefined") return;
+    const ch = new BroadcastChannel(PRESENT_CHANNEL);
+    const announce = () =>
+      ch.postMessage({
+        type: "present:state",
+        imageId,
+        mapId: mapIdParam,
+        showPins,
+        name: alt,
+      });
+    announce();
+    ch.onmessage = (e) => {
+      if (e.data?.type === "present:query") announce();
+      if (e.data?.type === "present:close") window.close();
+    };
+    const handleHide = () => ch.postMessage({ type: "present:closed" });
+    window.addEventListener("pagehide", handleHide);
+    return () => {
+      window.removeEventListener("pagehide", handleHide);
+      ch.close();
+    };
+  }, [imageId, mapIdParam, showPins, alt]);
 
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {

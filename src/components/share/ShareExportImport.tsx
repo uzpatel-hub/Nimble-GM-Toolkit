@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { Download, Upload, Share2, Check } from 'lucide-react';
 import { useCampaignStore } from '@/stores/campaign-store';
 import { useNpcStore } from '@/stores/npc-store';
@@ -12,7 +12,7 @@ import {
   parseShareFile,
   importSharePayload,
 } from '@/lib/share';
-import type { NPC, GameMap } from '@/types';
+import type { NPC, GameMap, ImageCategory } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -25,6 +25,15 @@ import {
 } from '@/components/ui/dialog';
 
 // ---- Export Dialog ----
+
+const IMAGE_CATEGORIES: ImageCategory[] = ['map', 'npc-portrait', 'player-portrait', 'scene', 'handout'];
+const IMAGE_CATEGORY_LABELS: Record<ImageCategory, string> = {
+  map: 'Maps',
+  'npc-portrait': 'NPC Portraits',
+  'player-portrait': 'Player Portraits',
+  scene: 'Scenes',
+  handout: 'Handouts',
+};
 
 interface ShareExportProps {
   campaignId: string;
@@ -53,8 +62,19 @@ export function ShareExportDialog({ campaignId, preSelectedNpcIds, trigger }: Sh
   const [selectedMapIds, setSelectedMapIds] = useState<Set<string>>(
     new Set(campaignMaps.map((m) => m.id))
   );
+  const [selectedImageIds, setSelectedImageIds] = useState<Set<string>>(
+    new Set(preSelectedNpcIds ? [] : campaignImages.map((img) => img.id))
+  );
   const [exporting, setExporting] = useState(false);
   const [exported, setExported] = useState(false);
+
+  // Images grouped by category, for the category-based selection UI
+  const imagesByCategory = useMemo(() => {
+    const groups = IMAGE_CATEGORIES
+      .map((cat) => ({ cat, images: campaignImages.filter((img) => img.category === cat) }))
+      .filter((g) => g.images.length > 0);
+    return groups;
+  }, [campaignImages]);
 
   // Reset state when dialog opens
   function handleOpenChange(v: boolean) {
@@ -62,6 +82,7 @@ export function ShareExportDialog({ campaignId, preSelectedNpcIds, trigger }: Sh
     if (v) {
       setSelectedNpcIds(new Set(preSelectedNpcIds ?? campaignNpcs.map((n) => n.id)));
       setSelectedMapIds(new Set(campaignMaps.map((m) => m.id)));
+      setSelectedImageIds(new Set(preSelectedNpcIds ? [] : campaignImages.map((img) => img.id)));
       setIncludeParty(!preSelectedNpcIds);
       setIncludeMaps(!preSelectedNpcIds);
       setExported(false);
@@ -102,6 +123,27 @@ export function ShareExportDialog({ campaignId, preSelectedNpcIds, trigger }: Sh
     }
   }
 
+  function toggleImage(id: string) {
+    setSelectedImageIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleCategoryImages(catImageIds: string[]) {
+    setSelectedImageIds((prev) => {
+      const next = new Set(prev);
+      const allSelected = catImageIds.every((id) => next.has(id));
+      for (const id of catImageIds) {
+        if (allSelected) next.delete(id);
+        else next.add(id);
+      }
+      return next;
+    });
+  }
+
   async function handleExport() {
     if (!campaign) return;
     setExporting(true);
@@ -114,6 +156,7 @@ export function ShareExportDialog({ campaignId, preSelectedNpcIds, trigger }: Sh
         npcs: selectedNpcs,
         images: campaignImages,
         maps: selectedMaps,
+        selectedImageIds: Array.from(selectedImageIds),
       });
 
       const label = preSelectedNpcIds?.length === 1
@@ -126,7 +169,7 @@ export function ShareExportDialog({ campaignId, preSelectedNpcIds, trigger }: Sh
     }
   }
 
-  const totalItems = (includeParty ? (campaign?.partyMembers?.length ?? 0) : 0) + selectedNpcIds.size + (includeMaps ? selectedMapIds.size : 0);
+  const totalItems = (includeParty ? (campaign?.partyMembers?.length ?? 0) : 0) + selectedNpcIds.size + (includeMaps ? selectedMapIds.size : 0) + (preSelectedNpcIds ? 0 : selectedImageIds.size);
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -146,8 +189,9 @@ export function ShareExportDialog({ campaignId, preSelectedNpcIds, trigger }: Sh
         </DialogHeader>
 
         <p className="text-sm text-muted-foreground">
-          Export party members and NPCs as a file that another GM can import into their campaign.
-          Images are included automatically.
+          Export party members, NPCs, maps, and images as a file that another GM can import
+          into their campaign. Attached portraits and map art are included automatically; you
+          can also pick additional images by category below.
         </p>
 
         <div className="space-y-4">
@@ -233,6 +277,54 @@ export function ShareExportDialog({ campaignId, preSelectedNpcIds, trigger }: Sh
                     </span>
                   </label>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* Image selection by category */}
+          {!preSelectedNpcIds && imagesByCategory.length > 0 && (
+            <div className="space-y-2">
+              <span className="text-sm font-medium">Images</span>
+              <p className="text-xs text-muted-foreground">
+                Choose images to include by category. Portraits and maps attached to the
+                items above are always included automatically.
+              </p>
+              <div className="space-y-3 max-h-72 overflow-y-auto rounded-md border p-2">
+                {imagesByCategory.map(({ cat, images: catImages }) => {
+                  const catIds = catImages.map((img) => img.id);
+                  const allSelected = catIds.every((id) => selectedImageIds.has(id));
+                  return (
+                    <div key={cat} className="space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                          {IMAGE_CATEGORY_LABELS[cat]} ({catImages.length})
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 text-xs"
+                          onClick={() => toggleCategoryImages(catIds)}
+                        >
+                          {allSelected ? 'Deselect All' : 'Select All'}
+                        </Button>
+                      </div>
+                      {catImages.map((img) => (
+                        <label
+                          key={img.id}
+                          className="flex items-center gap-3 rounded px-2 py-1.5 cursor-pointer hover:bg-muted/30"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedImageIds.has(img.id)}
+                            onChange={() => toggleImage(img.id)}
+                            className="h-4 w-4 rounded border-gray-300"
+                          />
+                          <span className="text-sm">{img.name}</span>
+                        </label>
+                      ))}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}

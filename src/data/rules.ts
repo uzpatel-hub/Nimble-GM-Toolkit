@@ -21,6 +21,21 @@ export const CONDITIONS: Condition[] = [
   { name: "Wounded", description: "Has any Wounds. 6 Wounds and a hero is dead (unless an ability changes this number)." },
 ];
 
+/**
+ * Hexbinder Afflictions (playtest class). Applied to enemies and tracked
+ * like conditions during an encounter. Source: Hexbinder v0.1.
+ */
+export const AFFLICTIONS: Condition[] = [
+  { name: "Brittle", description: "Target suffers 1 damage for each space it moves (or is moved). At level 10: 2 damage per space." },
+  { name: "Dimmed", description: "Target has disadvantage 2 when attacking beyond Range/Reach 1." },
+  { name: "Doomed", description: "(1/encounter) Maximize the next roll made against the Afflicted target." },
+  { name: "Enfeebled", description: "Target falls Prone at the end of each of your turns." },
+  { name: "Frenzied", description: "Target's first attack each round MUST be against the nearest random creature (acts first amongst monsters)." },
+  { name: "Pestilent", description: "On death of target: creatures within Reach 2 of it suffer LVL damage (ignoring armor)." },
+  { name: "Sundered", description: "Target's armor is reduced 1 step." },
+  { name: "Withered", description: "Target's first attack each round against a friendly creature is made with disadvantage." },
+];
+
 export const COMBAT_RULES: CombatRule[] = [
   {
     title: "Turn Structure",
