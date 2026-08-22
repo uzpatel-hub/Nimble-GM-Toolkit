@@ -45,8 +45,10 @@ export const useAuthStore = create<AuthStore>()(
       },
 
       logout: () => {
-        resetAllStores();
+        // Clear currentUser first so persist writes triggered by resetAllStores()
+        // are no-op'd instead of overwriting the user's saved data.
         setCurrentUser(null);
+        resetAllStores();
         set({ currentUser: null, error: null });
       },
     }),

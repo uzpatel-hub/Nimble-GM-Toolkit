@@ -136,7 +136,7 @@ export function AppSidebar() {
       <Separator />
 
       {/* Navigation */}
-      <ScrollArea className="flex-1">
+      <ScrollArea className="flex-1 min-h-0">
         <nav className="p-2 space-y-1">
           {/* Campaign nav */}
           {campaignNav.length > 0 && (
